@@ -1,0 +1,31 @@
+# Aquí se guardarán los diseños generados por Stitch
+
+## Estructura sugerida:
+```
+vistas/
+├── 01-hub/
+│   ├── hub-principal.png
+│   └── variantes/
+├── 02-setup/
+│   ├── setup-local.png
+│   ├── setup-lan.png
+│   └── variantes/
+├── 03-lan-lobby/
+│   ├── lobby-host.png
+│   ├── lobby-cliente.png
+│   └── variantes/
+├── 04-the-mind/
+│   ├── mind-juego.png
+│   ├── mind-resultado.png
+│   └── variantes/
+├── 05-el-as/
+│   ├── elas-juego.png
+│   ├── elas-resultado.png
+│   └── variantes/
+├── 06-settings/
+│   ├── settings.png
+│   └── variantes/
+└── 07-discovery/
+    ├── room-discovery.png
+    └── variantes/
+```
