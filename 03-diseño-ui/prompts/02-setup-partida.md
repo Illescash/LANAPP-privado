@@ -1,6 +1,4 @@
-# Prompt: Configuración de Partida (SetupView)
 
-Utiliza la configuración de estilo de `00-configuracion-general.md`.
 
 ## Tarea
 Diseña una pantalla de configuración de partida para una app de juegos móvil.

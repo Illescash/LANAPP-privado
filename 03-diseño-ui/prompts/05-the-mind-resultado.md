@@ -1,6 +1,4 @@
-# Prompt: The Mind - Resultado (MindResultView)
 
-Utiliza la configuración de estilo de `00-configuracion-general.md`.
 
 ## Tarea
 Diseña la pantalla de transición tras completar o fallar un nivel en "The Mind".

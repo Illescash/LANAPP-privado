@@ -1,6 +1,4 @@
-# Prompt: The Mind - Pantalla de Juego (MindNumbersView)
 
-Utiliza la configuración de estilo de `00-configuracion-general.md`.
 
 ## Tarea
 Diseña la pantalla de juego para "The Mind", centrada en la sincronización mental.

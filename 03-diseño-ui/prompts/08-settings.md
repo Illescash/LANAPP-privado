@@ -1,6 +1,4 @@
-# Prompt: Ajustes (SettingsView)
 
-Utiliza la configuración de estilo de `00-configuracion-general.md`.
 
 ## Tarea
 Diseña una pantalla de ajustes limpia y moderna.

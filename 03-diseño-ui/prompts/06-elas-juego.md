@@ -1,6 +1,4 @@
-# Prompt: El As - Pantalla de Juego (ElAsGameView)
 
-Utiliza la configuración de estilo de `00-configuracion-general.md`.
 
 ## Tarea
 Diseña la pantalla de juego para "El As", basada en una baraja española.

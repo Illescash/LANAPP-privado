@@ -1,9 +1,7 @@
-# Prompt: Hub Principal (HubView)
 
-Utiliza la configuración de estilo de `00-configuracion-general.md`.
 
 ## Tarea
-Diseña una pantalla de hub principal para una app de juegos móvil llamada "PartyHub". 
+Diseña una pantalla de hub principal para una app de juegos móvil llamada "Previa Games". 
 
 ## Diseño
 - **Orientación**: Vertical (portrait)

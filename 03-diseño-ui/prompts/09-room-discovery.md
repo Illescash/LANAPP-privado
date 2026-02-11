@@ -1,6 +1,4 @@
-# Prompt: Descubrimiento de Salas (RoomDiscoveryView)
 
-Utiliza la configuración de estilo de `00-configuracion-general.md`.
 
 ## Tarea
 Diseña una pantalla para buscar y unirse a salas LAN existentes.

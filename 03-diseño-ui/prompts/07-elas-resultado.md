@@ -1,6 +1,4 @@
-# Prompt: El As - Resultado (ElAsRoundResultView)
 
-Utiliza la configuración de estilo de `00-configuracion-general.md`.
 
 ## Tarea
 Diseña la pantalla de resultados tras una ronda de "El As".
