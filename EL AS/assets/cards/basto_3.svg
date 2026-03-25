@@ -84,26 +84,29 @@
   <path d="M 60 12 L 140 12 M 60 288 L 140 288 M 188 80 L 188 220 M 12 80 L 12 220" fill="none" stroke="#00ff00" stroke-width="1.5" stroke-dasharray="8,4" opacity="0.8"/>
 
   <!-- Top-left Number -->
-  <text x="22" y="44" font-family="'Courier New', monospace" font-weight="900" font-size="28" fill="#fff" filter="url(#neonGlowLime)">2</text>
-  <text x="22" y="44" font-family="'Courier New', monospace" font-weight="900" font-size="28" fill="#ccff00">2</text>
+  <text x="22" y="44" font-family="'Courier New', monospace" font-weight="900" font-size="28" fill="#fff" filter="url(#neonGlowLime)">3</text>
+  <text x="22" y="44" font-family="'Courier New', monospace" font-weight="900" font-size="28" fill="#ccff00">3</text>
 
   <!-- Bottom-right Number -->
   <g transform="translate(178, 256) rotate(180)">
-    <text x="0" y="0" font-family="'Courier New', monospace" font-weight="900" font-size="28" fill="#fff" filter="url(#neonGlowLime)">2</text>
-    <text x="0" y="0" font-family="'Courier New', monospace" font-weight="900" font-size="28" fill="#ccff00">2</text>
+    <text x="0" y="0" font-family="'Courier New', monospace" font-weight="900" font-size="28" fill="#fff" filter="url(#neonGlowLime)">3</text>
+    <text x="0" y="0" font-family="'Courier New', monospace" font-weight="900" font-size="28" fill="#ccff00">3</text>
   </g>
 
-  <!-- Two Bastos -->
-  <use href="#maceSmall" x="100" y="65"/>
-  <use href="#maceSmall" x="100" y="190"/>
+  <!-- Three Bastos -->
+  <use href="#maceSmall" x="100" y="50"/>
+  <use href="#maceSmall" x="100" y="130"/>
+  <use href="#maceSmall" x="100" y="210"/>
 
-  <!-- Connecting Tech Line -->
-  <path d="M 100 100 L 100 155" fill="none" stroke="#00ff00" stroke-width="0.8" stroke-dasharray="4,2" opacity="0.6"/>
-  <circle cx="100" cy="127" r="2" fill="#ccff00" filter="url(#neonGlowLime)"/>
+  <!-- Connecting Tech Lines -->
+  <path d="M 100 85 L 100 110" fill="none" stroke="#00ff00" stroke-width="0.8" stroke-dasharray="4,2" opacity="0.6"/>
+  <path d="M 100 165 L 100 190" fill="none" stroke="#00ff00" stroke-width="0.8" stroke-dasharray="4,2" opacity="0.6"/>
+  <circle cx="100" cy="97" r="2" fill="#ccff00" filter="url(#neonGlowLime)"/>
+  <circle cx="100" cy="177" r="2" fill="#ccff00" filter="url(#neonGlowLime)"/>
 
   <!-- Floating Stars -->
-  <g transform="translate(100, 40) scale(0.6)"><use href="#floatingStar"/></g>
-  <g transform="translate(100, 240) scale(0.6)"><use href="#floatingStar"/></g>
+  <g transform="translate(100, 25) scale(0.6)"><use href="#floatingStar"/></g>
+  <g transform="translate(100, 255) scale(0.6)"><use href="#floatingStar"/></g>
 
   <!-- Holographic overlay text -->
   <text x="100" y="280" font-family="'Courier New', monospace" font-size="8" fill="#ccff00" text-anchor="middle" letter-spacing="4" opacity="0.6">Peer2Play</text>
