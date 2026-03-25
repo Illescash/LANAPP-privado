@@ -70,6 +70,17 @@ feature/elas/     → Juego El As (Activity, Fragments, VM, Engine)
 network/          → (Entrega 3)
 ```
 
+## Dos repositorios Git
+
+Este proyecto usa **dos repos independientes**:
+
+| Repo | Ruta | Contenido |
+|------|------|-----------|
+| **Documentación** | raíz (`Apps móviles/`) | Docs, diseño, requisitos, prototipos, plan de entrega |
+| **App Android** | `app/` | Proyecto Android Studio completo (código fuente evaluable) |
+
+`app/` está en el `.gitignore` del repo padre para evitar conflictos. Son repos con historiales, ramas y remotos separados. Los commits del plan de entrega (`ENTREGA_2.md`) van al repo de `app/`.
+
 ## Reglas para agentes
 
 - **GameEngine NUNCA debe importar `android.*`** — es lógica pura Kotlin.
@@ -78,6 +89,8 @@ network/          → (Entrega 3)
 - Guardar estado en `onSaveInstanceState()`. Restaurar en `onCreate(savedInstanceState)`.
 - Commits con formato: `tipo(ámbito): descripción` (feat, fix, refactor, style, docs, chore).
 - Ramas: `main` ← `develop` ← `feature/*`.
+- **NUNCA hacer commit sin aprobación del usuario.** Antes de commitear, mostrar al usuario el mensaje de commit propuesto y los archivos que se incluirán, y esperar su OK.
+- Tras crear/modificar código Android, el usuario verificará en Android Studio que compila antes de commitear.
 
 ## Documentación del proyecto
 

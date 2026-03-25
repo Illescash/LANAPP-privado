@@ -24,3 +24,6 @@ dist/
 # Temporary files
 *.log
 tmp/
+
+# Proyecto Android Studio (repo independiente dentro de app/)
+app/
