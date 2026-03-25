@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor de Baraja - Cyberpunk</title>
+    <style>
+        body {
+            background-color: #0a0a14;
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+            margin-bottom: 5px;
+        }
+
+        p.subtitle {
+            color: #ff00ff;
+            margin-top: 0;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            letter-spacing: 2px;
+        }
+
+        .controls {
+            margin-bottom: 30px;
+        }
+
+        select {
+            background-color: #12122b;
+            color: #00ffff;
+            border: 1px solid #ff00ff;
+            padding: 12px 20px;
+            font-size: 1.1em;
+            font-family: inherit;
+            border-radius: 8px;
+            outline: none;
+            box-shadow: 0 0 8px rgba(255, 0, 255, 0.4);
+            cursor: pointer;
+        }
+
+        select:focus {
+            box-shadow: 0 0 12px rgba(0, 255, 255, 0.6);
+            border-color: #00ffff;
+        }
+
+        .deck-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 25px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .card-container {
+            width: 200px;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 255, 255, 0.2), inset 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        .card-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+            /* Hidden until loaded successfully */
+        }
+
+        .card-container.wip {
+            border-color: #ff00ff;
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.2), inset 0 0 30px rgba(255, 0, 255, 0.1);
+        }
+
+        .wip-text {
+            color: #ff00ff;
+            font-size: 3em;
+            font-weight: 900;
+            text-shadow: 0 0 8px #ff00ff, 2px 2px 0 #00ffff;
+            transform: rotate(-30deg);
+            opacity: 0.8;
+            letter-spacing: 4px;
+        }
+
+        .card-label {
+            position: absolute;
+            bottom: -40px;
+            background: rgba(10, 10, 20, 0.9);
+            width: 100%;
+            text-align: center;
+            padding: 10px 0;
+            color: #00ffff;
+            font-size: 0.9em;
+            font-weight: bold;
+            transition: bottom 0.3s;
+            border-top: 1px solid #00ffff;
+            text-transform: uppercase;
+        }
+
+        .card-container:hover .card-label {
+            bottom: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>DECK CYBERPUNK</h1>
+    <p class="subtitle">ESTADO DE CARGA DE ASSETS</p>
+
+    <div class="controls">
+        <select id="suitFilter">
+            <option value="oro">Solo Oros</option>
+            <option value="copa">Solo Copas</option>
+            <option value="espada">Solo Espadas</option>
+            <option value="basto">Solo Bastos</option>
+        </select>
+    </div>
+
+    <div class="deck-grid" id="deckGrid"></div>
+
+    <script>
+        const suits = ['oro', 'copa', 'espada', 'basto'];
+        const values = [1, 2, 3, 4, 5, 6, 7, 10, 11, 12];
+        const grid = document.getElementById('deckGrid');
+        const filter = document.getElementById('suitFilter');
+
+        function renderDeck(suitFilter) {
+            grid.innerHTML = '';
+            suits.forEach(suit => {
+                // Now it always requires a specific suit to render
+                if (suitFilter !== suit) return;
+
+                values.forEach(value => {
+                    const cardDiv = document.createElement('div');
+                    cardDiv.className = 'card-container';
+
+                    // Naming convention: {suit}_{value}.svg
+                    const imgName = `${suit}_${value}.svg`;
+                    const imgSrc = `assets/cards/${imgName}`;
+
+                    const img = document.createElement('img');
+                    img.src = imgSrc;
+
+                    const wipText = document.createElement('div');
+                    wipText.className = 'wip-text';
+                    wipText.textContent = 'WIP';
+
+                    const labelName = value === 10 ? 'Sota' : value === 11 ? 'Caballo' : value === 12 ? 'Rey' : value;
+                    const label = document.createElement('div');
+                    label.className = 'card-label';
+                    label.textContent = `${suit} ${labelName}`;
+
+                    // If loaded, hide WIP, show image
+                    img.onload = () => {
+                        img.style.display = 'block';
+                        wipText.style.display = 'none';
+                        cardDiv.style.borderColor = '#00ffff'; // Completed card border
+                    };
+
+                    // If errors loading (not generated yet), show WIP styling
+                    img.onerror = () => {
+                        cardDiv.classList.add('wip');
+                        img.style.display = 'none';
+                        wipText.style.display = 'block';
+                    };
+
+                    cardDiv.appendChild(img);
+                    cardDiv.appendChild(wipText);
+                    cardDiv.appendChild(label);
+                    grid.appendChild(cardDiv);
+                });
+            });
+        }
+
+        filter.addEventListener('change', (e) => renderDeck(e.target.value));
+
+        // Initial render: Default to the first option (Oros)
+        renderDeck(filter.value);
+    </script>
+</body>
+
+</html>

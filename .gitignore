@@ -3,15 +3,22 @@
 .idea/
 *.swp
 *.swo
+*.iml
 
 # OS files
 .DS_Store
 Thumbs.db
 
-# Dependencies (for future)
+# Android / Gradle
+build/
+.gradle/
+local.properties
+*.apk
+*.aab
+
+# Dependencies
 node_modules/
 dist/
-build/
 .env
 
 # Temporary files
