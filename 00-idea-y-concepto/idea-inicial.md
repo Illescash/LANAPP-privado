@@ -135,7 +135,7 @@ PartyHub es un **hub de minijuegos** diseñado para jugar con amigos de manera *
 3. **Manejo de desconexiones** durante partida LAN
 4. **Diseño de UI que sirva para local y LAN** con adaptaciones
 
-### Alcance del Proyecto
+### Alcance del Proyecto 
 
 **MVP (Entrega 2)**:
 - Hub con 2 juegos
