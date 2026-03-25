@@ -4,6 +4,24 @@
 
 PartyHub es una app Android (Kotlin) que funciona como hub de minijuegos para jugar con amigos de forma presencial. Soporta dos modos: **Local** (un solo dispositivo) y **LAN** (cada jugador en su dispositivo, sin internet).
 
+## Equipo y Entregas
+
+| | |
+|-|-|
+| **Equipo** | Rafael Romero Monzón · Diego Illescas Lasa |
+| **Asignatura** | DADM – UAM EPS 2025-2026 · Alicia Garrido Peña |
+
+| Entrega | Peso | Contenido | Fecha | Estado |
+|---------|------|-----------|-------|--------|
+| E1 | — | Diseño + requisitos (presentación) | Completada | ✅ |
+| E2 | 30% | Hub + juegos en modo LOCAL | 8 abril 2026 | 🔨 En curso |
+| E3 | 70% | Añadir modo LAN + presentación | TBD | ⏳ |
+
+### Entrega 2 — Referencia rápida
+- **Rúbrica y normas detalladas**: [`ENTREGA2/NORMAS_ENTREGA2.md`](./ENTREGA2/NORMAS_ENTREGA2.md)
+- **Plan de entrega y commits**: [`ENTREGA_2.md`](./ENTREGA_2.md)
+- Criterios clave: Entorno (0,70) · Recursos/diseño (1,50) · Escuchadores (0,80) · DataBinding (1,25) · Intenciones/Nav (1,50) · Ciclo vida (1,00) · ViewModel (1,25) · Git (1,00) · General (1,00)
+
 ## Juegos incluidos
 
 | Juego | Mecánica | Jugadores |
@@ -14,27 +32,28 @@ PartyHub es una app Android (Kotlin) que funciona como hub de minijuegos para ju
 ## Stack técnico
 
 - **Lenguaje**: Kotlin
-- **UI**: XML + Jetpack Compose (nuevos componentes)
+- **UI**: XML layouts + ViewBinding/DataBinding (Entrega 2) · Jetpack Compose (Entrega 3)
 - **Arquitectura**: MVVM + Clean Architecture
 - **DI**: Hilt
 - **Async**: Coroutines + Flow
-- **Red LAN**: TCP (juego) + UDP broadcast (descubrimiento de salas)
+- **Navegación**: Jetpack Navigation Component (NavGraph + SafeArgs)
+- **Red LAN** (E3): TCP (juego) + UDP broadcast (descubrimiento)
 - **Serialización**: kotlinx.serialization (JSON)
 - **Min SDK**: Android 7.0 (API 24)
 
 ## Arquitectura y flujo de datos
 
 ```
-View (Fragment/Compose) → ViewModel → GameEngine (lógica pura) → StateFlow<GameState>
+View (Fragment) → ViewModel → GameEngine (lógica pura) → StateFlow<GameState>
 ```
 
-En modo LAN, el ViewModel despacha acciones al `NetworkManager` en lugar del Engine local. El Host tiene la GameEngine "verdadera" (fuente de verdad).
+En modo LAN (E3), el ViewModel despacha acciones al `NetworkManager`. El Host tiene la GameEngine "verdadera" (fuente de verdad).
 
 ### Componentes clave
 
 - **`GameEngine`** (`feature/[game]/engine/`): Lógica pura del juego. 100% Kotlin, 0% Android. Expone `StateFlow<GameState>`, recibe `GameAction` sellados.
-- **`ViewModel`** (`feature/[game]/`): Coordina UI state con GameEngine y NetworkManager.
-- **`NetworkManager`** (`network/`): Abstrae TCP/UDP. Roles: Host (Server) vs Client.
+- **`ViewModel`** (`feature/[game]/`): Coordina UI state con GameEngine. Usa `LiveData` o `StateFlow`.
+- **`NetworkManager`** (`network/`, solo E3): Abstrae TCP/UDP. Roles: Host vs Client.
 
 ### Estructura de paquetes (`com.partyhub`)
 
@@ -44,37 +63,31 @@ core/base/        → Clases abstractas (BaseViewModel, BaseFragment)
 core/di/          → Módulos Hilt
 data/repository/  → GameRepository
 data/prefs/       → SharedPreferences
-feature/hub/      → Pantalla principal
-feature/setup/    → Configuración de partida (Local/LAN)
-feature/themind/  → Juego The Mind (Fragment, VM, Engine)
-feature/elas/     → Juego El As (Fragment, VM, Engine)
-network/protocol/ → Mensajes (MessageType, DTOs)
-network/sockets/  → SocketHandler
-network/discovery/→ NSD/UDP para encontrar salas
+feature/hub/      → Pantalla principal (HubActivity, HubFragment)
+feature/setup/    → Configuración de partida
+feature/themind/  → Juego The Mind (Activity, Fragments, VM, Engine)
+feature/elas/     → Juego El As (Activity, Fragments, VM, Engine)
+network/          → (Entrega 3)
 ```
 
 ## Reglas para agentes
 
 - **GameEngine NUNCA debe importar `android.*`** — es lógica pura Kotlin.
-- Usar `Dispatchers.Main` para UI y `Dispatchers.IO` para Sockets.
-- Los sockets deben cerrarse en `ViewModel.onCleared()` o `Lifecycle.onDestroy()`.
-- Protocolo LAN: mensajes JSON sobre TCP. UDP solo para descubrimiento.
-
-## Entregas (asignatura UAM - Desarrollo Apps Móviles 2025-2026)
-
-| Entrega | Peso | Contenido | Estado |
-|---------|------|-----------|--------|
-| E1 | No evaluable | Diseño + requisitos (presentación) | Completada |
-| E2 | 30% | Hub + juegos en modo LOCAL | Pendiente |
-| E3 | 70% | Añadir modo LAN + presentación | Pendiente |
+- Usar `ViewBinding` siempre. `DataBinding` donde se justifique (vistas que observan datos).
+- Los Fragments deben usar `viewLifecycleOwner` para observar LiveData/Flow.
+- Guardar estado en `onSaveInstanceState()`. Restaurar en `onCreate(savedInstanceState)`.
+- Commits con formato: `tipo(ámbito): descripción` (feat, fix, refactor, style, docs, chore).
+- Ramas: `main` ← `develop` ← `feature/*`.
 
 ## Documentación del proyecto
 
-La documentación de diseño está en carpetas numeradas:
-
-- `00-idea-y-concepto/` → Concepto, visión, referencias y apps similares
-- `01-requisitos/` → Requisitos funcionales (RF-01 a RF-22), no funcionales (RNF-01 a RNF-22) y casos de uso (CU-01 a CU-12)
-- `02-diseño/` → Arquitectura MVVM, modelo de datos (Kotlin), diseño UI/UX
-- `03-diseño-ui/` → Mockups en `vistas/` y prompts de generación en `prompts/`
-- `EL AS/` → Prototipo web del juego El As (HTML)
-- `ENTREGA_1.md` → Documento de la Entrega 1 con diagramas Mermaid (casos de uso, clases, arquitectura) y prototipos UI
+| Ruta | Contenido |
+|------|-----------|
+| `00-idea-y-concepto/` | Concepto, visión, referencias |
+| `01-requisitos/` | RF-01..22, RNF-01..22, CU-01..12 |
+| `02-diseño/` | Arquitectura MVVM, modelo de datos |
+| `03-diseño-ui/` | Mockups en `vistas/` y prompts en `prompts/` |
+| `ENTREGA2/` | Normas, rúbrica y material de la Entrega 2 |
+| `EL AS/` | Prototipo web del juego El As (HTML) |
+| `ENTREGA_1.md` | Documento Entrega 1 (diagramas + prototipos) |
+| `ENTREGA_2.md` | Plan de entrega 2 (criterios, commits, arquitectura) |
