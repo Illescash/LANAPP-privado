@@ -31,43 +31,49 @@ PartyHub es una app Android (Kotlin) que funciona como hub de minijuegos para ju
 
 ## Stack técnico
 
+### Entrega 2 (actual) — Solo lo visto en UAMx
 - **Lenguaje**: Kotlin
-- **UI**: XML layouts + ViewBinding/DataBinding (Entrega 2) · Jetpack Compose (Entrega 3)
-- **Arquitectura**: MVVM + Clean Architecture
-- **DI**: Hilt
-- **Async**: Coroutines + Flow
-- **Navegación**: Jetpack Navigation Component (NavGraph + SafeArgs)
-- **Red LAN** (E3): TCP (juego) + UDP broadcast (descubrimiento)
-- **Serialización**: kotlinx.serialization (JSON)
+- **UI**: XML layouts + ViewBinding (Activities) + DataBinding con `@{}` (Fragments de juego)
+- **Arquitectura**: MVVM (ViewModel + LiveData + GameEngine)
+- **ViewModel**: `ViewModelProvider(this).get(...)` con `by lazy` — **sin Hilt**
+- **Datos reactivos**: `MutableLiveData` (privado) + `LiveData` (público) — backing property pattern
+- **Navegación**: Jetpack Navigation Component (NavGraph + Safe Args)
+- **Intenciones**: explícitas (Hub→Juego) + implícitas (`ACTION_SEND` compartir resultado)
+- **Selección de juegos**: LinearLayout con botones — **sin RecyclerView** (no visto en clase)
+- **Logging**: Timber
 - **Min SDK**: Android 7.0 (API 24)
 
-## Arquitectura y flujo de datos
+### Entrega 3 (futuro) — Se añadirá
+- Jetpack Compose (sustituir XML layouts)
+- Hilt / DI
+- Coroutines + Flow + StateFlow
+- RecyclerView
+- kotlinx.serialization (JSON)
+- Red LAN: TCP (juego) + UDP broadcast (descubrimiento)
+- Clean Architecture con Repository
+
+## Arquitectura y flujo de datos (E2)
 
 ```
-View (Fragment) → ViewModel → GameEngine (lógica pura) → StateFlow<GameState>
+View (Fragment con DataBinding) → ViewModel (LiveData) → GameEngine (lógica pura Kotlin)
 ```
 
-En modo LAN (E3), el ViewModel despacha acciones al `NetworkManager`. El Host tiene la GameEngine "verdadera" (fuente de verdad).
+En modo LAN (E3), el ViewModel despachará acciones al `NetworkManager`. El Host tendrá la GameEngine "verdadera" (fuente de verdad).
 
-### Componentes clave
+### Componentes clave (E2)
 
-- **`GameEngine`** (`feature/[game]/engine/`): Lógica pura del juego. 100% Kotlin, 0% Android. Expone `StateFlow<GameState>`, recibe `GameAction` sellados.
-- **`ViewModel`** (`feature/[game]/`): Coordina UI state con GameEngine. Usa `LiveData` o `StateFlow`.
+- **`GameEngine`** (`feature/[game]/engine/`): Lógica pura del juego. 100% Kotlin, 0% Android. Recibe acciones, devuelve estado.
+- **`ViewModel`** (`feature/[game]/`): Coordina UI con GameEngine. Usa `MutableLiveData`/`LiveData`. Instanciado con `ViewModelProvider` + `by lazy`.
+- **`Fragments`**: Usan `viewLifecycleOwner`, patrón `_binding`/`binding`, limpieza en `onDestroyView()`.
 - **`NetworkManager`** (`network/`, solo E3): Abstrae TCP/UDP. Roles: Host vs Client.
 
 ### Estructura de paquetes (`com.partyhub`)
 
 ```
-core/model/       → Data classes inmutables (Player, Room, Card). Sin lógica.
-core/base/        → Clases abstractas (BaseViewModel, BaseFragment)
-core/di/          → Módulos Hilt
-data/repository/  → GameRepository
-data/prefs/       → SharedPreferences
+core/model/       → Data classes inmutables (Player, Card). Sin lógica.
 feature/hub/      → Pantalla principal (HubActivity, HubFragment)
-feature/setup/    → Configuración de partida
 feature/themind/  → Juego The Mind (Activity, Fragments, VM, Engine)
 feature/elas/     → Juego El As (Activity, Fragments, VM, Engine)
-network/          → (Entrega 3)
 ```
 
 ## Dos repositorios Git
@@ -83,14 +89,27 @@ Este proyecto usa **dos repos independientes**:
 
 ## Reglas para agentes
 
+### Código
 - **GameEngine NUNCA debe importar `android.*`** — es lógica pura Kotlin.
-- Usar `ViewBinding` siempre. `DataBinding` donde se justifique (vistas que observan datos).
-- Los Fragments deben usar `viewLifecycleOwner` para observar LiveData/Flow.
+- **ViewBinding** en Activities. **DataBinding** con `@{}` en Fragments que observan datos del ViewModel.
+- Los Fragments deben usar `viewLifecycleOwner` para observar LiveData (NO `this`).
+- Fragments: usar patrón `_binding` (nullable) / `binding` (non-null get), limpiar en `onDestroyView()`.
+- `binding.lifecycleOwner = viewLifecycleOwner` en cada Fragment que use DataBinding.
+- ViewModel: instanciar con `ViewModelProvider(this).get(...)` usando `by lazy`. **NO usar Hilt** en E2.
+- LiveData: `private val _dato = MutableLiveData<T>()` + `val dato: LiveData<T> get() = _dato` (backing property).
 - Guardar estado en `onSaveInstanceState()`. Restaurar en `onCreate(savedInstanceState)`.
+- **NO usar** en E2: Hilt, Coroutines, Flow, StateFlow, RecyclerView, Compose, kotlinx.serialization.
+
+### Commits y Git
 - Commits con formato: `tipo(ámbito): descripción` (feat, fix, refactor, style, docs, chore).
 - Ramas: `main` ← `develop` ← `feature/*`.
 - **NUNCA hacer commit sin aprobación del usuario.** Antes de commitear, mostrar al usuario el mensaje de commit propuesto y los archivos que se incluirán, y esperar su OK.
 - Tras crear/modificar código Android, el usuario verificará en Android Studio que compila antes de commitear.
+
+### Registro de commits realizados
+- Tras cada commit en el repo `app/`, **actualizar `ENTREGA_2.md`** en el repo de documentación: añadir el commit realizado en la tabla correspondiente, marcándolo como hecho.
+- Esto aplica a **ambos miembros del equipo** (Diego y Rafael). Si el agente ayuda a hacer un commit, debe proponer también la actualización de `ENTREGA_2.md` para que quede registrado.
+- El plan de commits en `ENTREGA_2.md` es orientativo; los commits reales pueden variar en fecha o mensaje. Lo importante es mantener el registro actualizado.
 
 ## Documentación del proyecto
 

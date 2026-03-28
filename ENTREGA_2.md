@@ -20,12 +20,12 @@ Hub funcional + minijuegos en **modo LOCAL** (un solo dispositivo). Se evalúa l
 | Criterio | Peso | Cómo lo cubrimos en PartyHub |
 |----------|------|------------------------------|
 | Entorno de desarrollo | 0,70 | Proyecto Android Studio con Gradle configurado, versionado correcto |
-| Recursos y diseño | 1,50 | Layouts XML (ConstraintLayout), strings.xml, colors.xml, icono y nombre personalizados |
+| Recursos y diseño | 1,50 | Layouts XML (RelativeLayout/LinearLayout), strings.xml, colors.xml, icono y nombre personalizados |
 | Escuchadores | 0,80 | Botones del Hub, acciones de juego (jugar carta, seleccionar número) |
-| DataBinding | 1,25 | ViewBinding en Activities/Fragments, DataBinding con `@{}` en vistas de juego |
-| Intenciones y Navegación | 1,50 | Intent Hub→Juego, NavGraph entre Fragments de configuración/juego/resultados |
+| DataBinding | 1,25 | ViewBinding en Activities, DataBinding con `@{}` en Fragments de juego |
+| Intenciones y Navegación | 1,50 | Intent explícito Hub→Juego, Intent implícito (compartir resultado), NavGraph + Safe Args entre Fragments |
 | Ciclo de vida | 1,00 | Guardar estado de partida en onSaveInstanceState, restaurar en onCreate |
-| ViewModel | 1,25 | GameViewModel con StateFlow, MindGameState/AsGameState como LiveData |
+| ViewModel | 1,25 | GameViewModel con MutableLiveData/LiveData (backing property pattern) |
 | Control de versiones | 1,00 | Plan de commits estructurado (ver sección abajo) |
 | Aplicación general | 1,00 | Coherencia y calidad del producto final |
 
@@ -35,26 +35,38 @@ Hub funcional + minijuegos en **modo LOCAL** (un solo dispositivo). Se evalúa l
 
 ```
 HubActivity
-├── HubFragment (selección de juego)
+├── HubFragment (selección de juego con LinearLayout)
 │
 ├── [Intent explícito] → TheMindActivity
+│   ├── NavGraph + Safe Args
 │   ├── MindConfigFragment (num jugadores, dificultad)
-│   ├── MindGameFragment (pantalla de juego)
-│   └── MindResultFragment (resultados)
-│   └── MindViewModel + MindGameEngine
+│   ├── MindGameFragment (pantalla de juego con DataBinding @{})
+│   └── MindResultFragment (resultados + Intent implícito compartir)
+│   └── MindViewModel (LiveData) + MindGameEngine (lógica pura)
 │
 └── [Intent explícito] → ElAsActivity
+    ├── NavGraph + Safe Args
     ├── AsConfigFragment (num jugadores)
-    ├── AsGameFragment (pantalla de juego)
-    └── AsResultFragment (resultados)
-    └── AsViewModel + AsGameEngine
+    ├── AsGameFragment (pantalla de juego con DataBinding @{})
+    └── AsResultFragment (resultados + Intent implícito compartir)
+    └── AsViewModel (LiveData) + AsGameEngine (lógica pura)
 ```
+
+### Patrones técnicos alineados con UAMx
+
+- **ViewModel**: `ViewModelProvider(this).get(...)` con `by lazy` (sin Hilt)
+- **LiveData**: `MutableLiveData` privado + `LiveData` público (backing property)
+- **Fragments**: `viewLifecycleOwner` para observar, patrón `_binding`/`binding` con limpieza en `onDestroyView()`
+- **DataBinding**: `@{}` en XML para vincular datos del ViewModel, `binding.lifecycleOwner = viewLifecycleOwner`
+- **Selección de juegos**: LinearLayout con botones (sin RecyclerView, no visto en clase)
+- **Intenciones**: explícitas (Hub→Juego) + implícitas (`ACTION_SEND` para compartir resultados)
+- **Safe Args**: para pasar configuración entre fragments (num jugadores, dificultad)
 
 ---
 
 ## Plan de Commits (25 marzo → 8 abril)
 
-**Convención de mensajes:**
+**Convención de mensajes** (Conventional Commits, como indica la profe en UAMx):
 ```
 tipo(ámbito): descripción breve
 
@@ -66,30 +78,35 @@ style(hub): ajustar colores y tipografía del menú principal
 chore(gradle): configurar versionado y dependencias
 ```
 
-### Semana 1 (25-31 marzo) — Fundamentos
+### Commit inicial (ya realizado)
+
+| Fecha | Responsable | Commit |
+|-------|-------------|--------|
+| 28 mar | Diego | `chore(project): setup inicial del proyecto Android con Hilt y HubActivity` |
+
+### Semana 1 (28-31 marzo) — Hub + The Mind
 
 | Fecha | Responsable | Commits planificados |
 |-------|-------------|---------------------|
-| 25 mar | Diego | `chore(project): inicializar proyecto Android Studio` · `chore(gradle): configurar dependencias (ViewBinding, Navigation, ViewModel)` |
-| 26 mar | Rafael | `feat(hub): crear HubActivity con layout base` · `style(resources): definir strings.xml, colors.xml, dimens.xml` |
-| 27 mar | Diego | `feat(hub): implementar lista de juegos con RecyclerView` · `feat(hub): añadir navegación a juegos con Intent` |
-| 28 mar | Rafael | `feat(mind): crear MindActivity y NavGraph` · `feat(mind): implementar MindConfigFragment` |
-| 29 mar | Diego | `feat(mind): implementar MindGameFragment con UI` · `feat(mind): añadir DataBinding a vista de juego` |
-| 30 mar | Rafael | `feat(mind): crear MindViewModel con StateFlow` · `feat(mind): implementar MindGameEngine (lógica pura)` |
-| 31 mar | Ambos | `feat(mind): conectar ViewModel ↔ Engine ↔ UI` · `fix(mind): manejar ciclo de vida (onSaveInstanceState)` |
+| 28 mar | Diego | `refactor(project): reemplazar Hilt por ViewModelProvider` · `chore(gradle): configurar DataBinding, Navigation y Safe Args` |
+| 29 mar | Rafael | `feat(hub): crear HubFragment con selección de juegos` · `style(resources): definir strings.xml, colors.xml, dimens.xml` |
+| 29 mar | Diego | `feat(hub): añadir navegación Hub→Juegos con Intent explícito` |
+| 30 mar | Rafael | `feat(mind): crear MindActivity y NavGraph con Safe Args` · `feat(mind): implementar MindConfigFragment con DataBinding` |
+| 30 mar | Diego | `feat(mind): implementar MindGameEngine (lógica pura Kotlin)` · `feat(mind): crear MindViewModel con LiveData` |
+| 31 mar | Ambos | `feat(mind): implementar MindGameFragment con DataBinding` · `feat(mind): conectar ViewModel ↔ Engine ↔ UI` |
 
-### Semana 2 (1-8 abril) — El As + Pulido
+### Semana 2 (1-8 abril) — El As + Pulido + Entrega
 
 | Fecha | Responsable | Commits planificados |
 |-------|-------------|---------------------|
-| 1 abr | Diego | `feat(as): crear AsActivity y NavGraph` · `feat(as): implementar AsConfigFragment` |
-| 2 abr | Rafael | `feat(as): implementar AsGameFragment con UI` · `feat(as): añadir DataBinding a cartas` |
-| 3 abr | Diego | `feat(as): crear AsViewModel con StateFlow` · `feat(as): implementar AsGameEngine` |
-| 4 abr | Rafael | `feat(as): conectar ViewModel ↔ Engine ↔ UI` · `fix(as): manejar ciclo de vida` |
-| 5 abr | Diego | `feat(results): crear pantallas de resultados (Mind + As)` · `style(app): personalizar icono y nombre` |
-| 6 abr | Rafael | `refactor(binding): justificar uso de DataBinding vs ViewBinding` · `docs(entrega): documentar decisiones de diseño` |
-| 7 abr | Ambos | `style(ui): pulir diseño Material Design` · `fix(lifecycle): testing de rotación/background` |
-| 8 abr | Ambos | `docs(readme): actualizar documentación final` · `chore(release): preparar versión de entrega` |
+| 1 abr | Diego | `feat(as): crear AsActivity y NavGraph con Safe Args` · `feat(as): implementar AsConfigFragment con DataBinding` |
+| 2 abr | Rafael | `feat(as): implementar AsGameEngine (lógica pura Kotlin)` · `feat(as): crear AsViewModel con LiveData` |
+| 3 abr | Ambos | `feat(as): implementar AsGameFragment con DataBinding` · `feat(as): conectar ViewModel ↔ Engine ↔ UI` |
+| 4 abr | Diego | `feat(results): crear pantallas de resultados (Mind + As)` · `feat(results): añadir intent implícito para compartir resultado` |
+| 5 abr | Rafael | `fix(lifecycle): guardar/restaurar estado con onSaveInstanceState` · `style(app): personalizar icono y nombre de la app` |
+| 6 abr | Ambos | `style(ui): pulir diseño y recursos (colors, strings, dimens)` · `feat(hub): añadir logging con Timber` |
+| 7 abr | Ambos | `fix(lifecycle): testing de rotación y segundo plano` · `refactor(binding): justificar DataBinding vs ViewBinding en código` |
+| 8 abr | Ambos | `docs(readme): documentación final` · `chore(release): preparar versión de entrega` |
 
 ### Ramas sugeridas
 ```
@@ -101,28 +118,46 @@ main
 │   └── feature/ui-polish
 ```
 
+### Diferido a Entrega 3
+
+Lo siguiente **no se incluye** en E2 por no haberse visto en clase o no ser necesario para modo LOCAL:
+- Hilt / DI (se usa ViewModelProvider directamente)
+- Coroutines + Flow + StateFlow (se usa LiveData)
+- RecyclerView (se usa LinearLayout; RecyclerView no visto en UAMx)
+- Jetpack Compose (E3)
+- kotlinx.serialization (E3, para protocolo LAN)
+- Red LAN TCP/UDP (E3)
+- Clean Architecture con Repository (E3)
+
 ---
 
 ## Estructura del Proyecto
 
 ```
-LANAPP-privado/
+LANAPP-privado/ (repo documentación)
 ├── 00-idea-y-concepto/          # Concepto y visión
 ├── 01-requisitos/               # RF, RNF, Casos de uso
 ├── 02-diseño/                   # Arquitectura, modelo de datos
 ├── 03-diseño-ui/                # Mockups y prompts
 ├── ENTREGA2/
-│   └── NORMAS_ENTREGA2.md       # Rúbrica + contenido curso (referencia densa)
-├── app/                         # ← Proyecto Android Studio (por crear)
-│   └── src/main/
-│       ├── java/com/partyhub/
-│       │   ├── core/            # Base classes, DI
-│       │   ├── feature/hub/     # Hub principal
-│       │   ├── feature/themind/ # The Mind (Fragment, VM, Engine)
-│       │   └── feature/elas/   # El As (Fragment, VM, Engine)
-│       └── res/                 # Layouts, strings, colors, drawables
+│   ├── NORMAS_ENTREGA2.md       # Rúbrica + contenido curso
+│   └── UAMx.txt                 # Contenido completo del curso UAMx
 ├── CLAUDE.md                    # Contexto técnico para agentes
 ├── ENTREGA_1.md                 # Documento Entrega 1
-├── ENTREGA_2.md                 # Este archivo
+├── ENTREGA_2.md                 # Este archivo (plan de commits)
 └── README.md                    # Resumen del proyecto
+
+app/ (repo Android Studio — separado, en .gitignore del padre)
+└── src/main/
+    ├── java/com/partyhub/
+    │   ├── core/model/          # Data classes (Player, Card)
+    │   ├── feature/hub/         # HubActivity, HubFragment
+    │   ├── feature/themind/     # MindActivity, Fragments, VM, Engine
+    │   └── feature/elas/        # AsActivity, Fragments, VM, Engine
+    └── res/
+        ├── layout/              # activity_*.xml, fragment_*.xml
+        ├── navigation/          # nav_mind.xml, nav_as.xml
+        ├── values/              # strings.xml, colors.xml, dimens.xml, themes.xml
+        ├── drawable/            # Iconos y gráficos
+        └── mipmap/              # Launcher icons
 ```
