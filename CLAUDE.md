@@ -90,6 +90,7 @@ Este proyecto usa **dos repos independientes**:
 ## Reglas para agentes
 
 ### Código
+- **PROHIBIDO mencionar IA en el código fuente.** NUNCA escribir comentarios, nombres de variables, strings ni ningún texto que haga referencia a CLAUDE.md, Claude, Copilot, ChatGPT, IA, agentes o cualquier herramienta de asistencia. El código debe parecer escrito íntegramente por humanos. Esto incluye comentarios como `// como exige CLAUDE.md`, `// requisito CLAUDE.md`, `// generado por IA`, etc.
 - **GameEngine NUNCA debe importar `android.*`** — es lógica pura Kotlin.
 - **ViewBinding** en Activities. **DataBinding** con `@{}` en Fragments que observan datos del ViewModel.
 - Los Fragments deben usar `viewLifecycleOwner` para observar LiveData (NO `this`).
@@ -107,7 +108,10 @@ Este proyecto usa **dos repos independientes**:
 - Tras crear/modificar código Android, el usuario verificará en Android Studio que compila antes de commitear.
 
 ### Registro de commits realizados
-- Tras cada commit en el repo `app/`, **actualizar `ENTREGA_2.md`** en el repo de documentación: añadir el commit realizado en la tabla correspondiente, marcándolo como hecho.
+- Tras cada commit en el repo `app/`, **actualizar la columna "Estado"** en las tablas de commits de `ENTREGA_2.md`:
+  - Commit hecho → cambiar `⬜` por `✅ <hash-corto>`. Si lo hizo alguien distinto al responsable original, indicarlo: `✅ 4539e6b (Rafael)`.
+  - Si el commit real difiere del planificado (mensaje, fecha, ámbito), mantener el texto original del plan y reflejar la diferencia en la columna de estado o con una nota.
+  - Si se añaden commits no planificados, añadir una fila nueva en la tabla correspondiente.
 - Esto aplica a **ambos miembros del equipo** (Diego y Rafael). Si el agente ayuda a hacer un commit, debe proponer también la actualización de `ENTREGA_2.md` para que quede registrado.
 - El plan de commits en `ENTREGA_2.md` es orientativo; los commits reales pueden variar en fecha o mensaje. Lo importante es mantener el registro actualizado.
 

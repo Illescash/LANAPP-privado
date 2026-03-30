@@ -78,35 +78,35 @@ style(hub): ajustar colores y tipografía del menú principal
 chore(gradle): configurar versionado y dependencias
 ```
 
-### Commit inicial (ya realizado)
+### Commit inicial
 
-| Fecha | Responsable | Commit |
-|-------|-------------|--------|
-| 28 mar | Diego | `chore(project): setup inicial del proyecto Android con Hilt y HubActivity` |
+| Fecha | Responsable | Commit | Estado |
+|-------|-------------|--------|--------|
+| 28 mar | Diego | `chore(project): setup inicial del proyecto Android con Hilt y HubActivity` | ✅ d07eb9c |
 
 ### Semana 1 (28-31 marzo) — Hub + The Mind
 
-| Fecha | Responsable | Commits planificados |
-|-------|-------------|---------------------|
-| 28 mar | Diego | `refactor(project): reemplazar Hilt por ViewModelProvider` · `chore(gradle): configurar DataBinding, Navigation y Safe Args` |
-| 29 mar | Rafael | `feat(hub): crear HubFragment con selección de juegos` · `style(resources): definir strings.xml, colors.xml, dimens.xml` |
-| 29 mar | Diego | `feat(hub): añadir navegación Hub→Juegos con Intent explícito` |
-| 30 mar | Rafael | `feat(mind): crear MindActivity y NavGraph con Safe Args` · `feat(mind): implementar MindConfigFragment con DataBinding` |
-| 30 mar | Diego | `feat(mind): implementar MindGameEngine (lógica pura Kotlin)` · `feat(mind): crear MindViewModel con LiveData` |
-| 31 mar | Ambos | `feat(mind): implementar MindGameFragment con DataBinding` · `feat(mind): conectar ViewModel ↔ Engine ↔ UI` |
+| Fecha | Responsable | Commits planificados | Estado |
+|-------|-------------|---------------------|--------|
+| 28 mar | Diego | `refactor(project): reemplazar Hilt por ViewModelProvider` · `chore(gradle): configurar DataBinding, Navigation y Safe Args` | ✅ 4539e6b (Rafael) |
+| 29 mar | Rafael | `feat(hub): crear HubFragment con selección de juegos` · `style(resources): definir strings.xml, colors.xml, dimens.xml` | ✅ 7e31a29 |
+| 29 mar | Diego | `feat(hub): añadir navegación Hub→Juegos con Intent explícito` | ✅ a2de385 |
+| 30 mar | Rafael | `feat(mind): crear MindActivity y NavGraph con Safe Args` · `feat(mind): implementar MindConfigFragment con DataBinding` | ⬜ |
+| 30 mar | Diego | `feat(mind): implementar MindGameEngine (lógica pura Kotlin)` · `feat(mind): crear MindViewModel con LiveData` | ✅ 098e4c4 |
+| 31 mar | Ambos | `feat(mind): implementar MindGameFragment con DataBinding` · `feat(mind): conectar ViewModel ↔ Engine ↔ UI` | ⬜ |
 
 ### Semana 2 (1-8 abril) — El As + Pulido + Entrega
 
-| Fecha | Responsable | Commits planificados |
-|-------|-------------|---------------------|
-| 1 abr | Diego | `feat(as): crear AsActivity y NavGraph con Safe Args` · `feat(as): implementar AsConfigFragment con DataBinding` |
-| 2 abr | Rafael | `feat(as): implementar AsGameEngine (lógica pura Kotlin)` · `feat(as): crear AsViewModel con LiveData` |
-| 3 abr | Ambos | `feat(as): implementar AsGameFragment con DataBinding` · `feat(as): conectar ViewModel ↔ Engine ↔ UI` |
-| 4 abr | Diego | `feat(results): crear pantallas de resultados (Mind + As)` · `feat(results): añadir intent implícito para compartir resultado` |
-| 5 abr | Rafael | `fix(lifecycle): guardar/restaurar estado con onSaveInstanceState` · `style(app): personalizar icono y nombre de la app` |
-| 6 abr | Ambos | `style(ui): pulir diseño y recursos (colors, strings, dimens)` · `feat(hub): añadir logging con Timber` |
-| 7 abr | Ambos | `fix(lifecycle): testing de rotación y segundo plano` · `refactor(binding): justificar DataBinding vs ViewBinding en código` |
-| 8 abr | Ambos | `docs(readme): documentación final` · `chore(release): preparar versión de entrega` |
+| Fecha | Responsable | Commits planificados | Estado |
+|-------|-------------|---------------------|--------|
+| 1 abr | Diego | `feat(as): crear AsActivity y NavGraph con Safe Args` · `feat(as): implementar AsConfigFragment con DataBinding` | ⬜ |
+| 2 abr | Rafael | `feat(as): implementar AsGameEngine (lógica pura Kotlin)` · `feat(as): crear AsViewModel con LiveData` | ⬜ |
+| 3 abr | Ambos | `feat(as): implementar AsGameFragment con DataBinding` · `feat(as): conectar ViewModel ↔ Engine ↔ UI` | ⬜ |
+| 4 abr | Diego | `feat(results): crear pantallas de resultados (Mind + As)` · `feat(results): añadir intent implícito para compartir resultado` | ⬜ |
+| 5 abr | Rafael | `fix(lifecycle): guardar/restaurar estado con onSaveInstanceState` · `style(app): personalizar icono y nombre de la app` | ⬜ |
+| 6 abr | Ambos | `style(ui): pulir diseño y recursos (colors, strings, dimens)` · `feat(hub): añadir logging con Timber` | ⬜ |
+| 7 abr | Ambos | `fix(lifecycle): testing de rotación y segundo plano` · `refactor(binding): justificar DataBinding vs ViewBinding en código` | ⬜ |
+| 8 abr | Ambos | `docs(readme): documentación final` · `chore(release): preparar versión de entrega` | ⬜ |
 
 ### Ramas sugeridas
 ```
