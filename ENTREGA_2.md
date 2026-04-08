@@ -91,22 +91,30 @@ chore(gradle): configurar versionado y dependencias
 | 28 mar | Diego | `refactor(project): reemplazar Hilt por ViewModelProvider` · `chore(gradle): configurar DataBinding, Navigation y Safe Args` | ✅ 4539e6b (Rafael) |
 | 29 mar | Rafael | `feat(hub): crear HubFragment con selección de juegos` · `style(resources): definir strings.xml, colors.xml, dimens.xml` | ✅ 7e31a29 |
 | 29 mar | Diego | `feat(hub): añadir navegación Hub→Juegos con Intent explícito` | ✅ a2de385 |
-| 30 mar | Rafael | `feat(mind): crear MindActivity y NavGraph con Safe Args` · `feat(mind): implementar MindConfigFragment con DataBinding` | ⬜ |
+| 29 mar | — | *(extra)* `chore(git): ignorar carpeta temporal de compilacion de kotlin` | ✅ 607d6d1 |
+| 30 mar | Rafael | `feat(mind): crear MindActivity y NavGraph con Safe Args` · `feat(mind): implementar MindConfigFragment con DataBinding` | ✅ dd1fa55 |
 | 30 mar | Diego | `feat(mind): implementar MindGameEngine (lógica pura Kotlin)` · `feat(mind): crear MindViewModel con LiveData` | ✅ 098e4c4 |
-| 31 mar | Ambos | `feat(mind): implementar MindGameFragment con DataBinding` · `feat(mind): conectar ViewModel ↔ Engine ↔ UI` | ⬜ |
+| 31 mar | Ambos | `feat(mind): implementar MindGameFragment con DataBinding` · `feat(mind): conectar ViewModel ↔ Engine ↔ UI` | ✅ 474f0dc |
 
 ### Semana 2 (1-8 abril) — El As + Pulido + Entrega
 
 | Fecha | Responsable | Commits planificados | Estado |
 |-------|-------------|---------------------|--------|
-| 1 abr | Diego | `feat(as): crear AsActivity y NavGraph con Safe Args` · `feat(as): implementar AsConfigFragment con DataBinding` | ⬜ |
-| 2 abr | Rafael | `feat(as): implementar AsGameEngine (lógica pura Kotlin)` · `feat(as): crear AsViewModel con LiveData` | ⬜ |
-| 3 abr | Ambos | `feat(as): implementar AsGameFragment con DataBinding` · `feat(as): conectar ViewModel ↔ Engine ↔ UI` | ⬜ |
-| 4 abr | Diego | `feat(results): crear pantallas de resultados (Mind + As)` · `feat(results): añadir intent implícito para compartir resultado` | ⬜ |
-| 5 abr | Rafael | `fix(lifecycle): guardar/restaurar estado con onSaveInstanceState` · `style(app): personalizar icono y nombre de la app` | ⬜ |
-| 6 abr | Ambos | `style(ui): pulir diseño y recursos (colors, strings, dimens)` · `feat(hub): añadir logging con Timber` | ⬜ |
-| 7 abr | Ambos | `fix(lifecycle): testing de rotación y segundo plano` · `refactor(binding): justificar DataBinding vs ViewBinding en código` | ⬜ |
-| 8 abr | Ambos | `docs(readme): documentación final` · `chore(release): preparar versión de entrega` | ⬜ |
+| 1 abr | Diego | `feat(mind): finalizar pantalla de resultados y navegación con Safe Args` *(anticipado)* | ✅ 904e0ae |
+| 1-6 abr | Ambos | `feat(as): crear AsActivity + NavGraph + AsConfigFragment + AsGameEngine + AsViewModel + AsGameFragment` *(squash)* | ✅ 751646e |
+| 8 abr | Diego | `feat(as): implementar AsResultFragment y navegación desde GAME_OVER` | ✅ (8 abr, Diego) |
+| 8 abr | Diego | `feat(results): añadir intent implícito para compartir resultado en The Mind y El As` | ✅ (8 abr, Diego) |
+| 8 abr | Diego | `feat(app): añadir logging con Timber en ViewModels y pantallas de resultado` | ✅ (8 abr, Diego) |
+
+### Pendiente — commits restantes
+
+| # | Commit | Responsable | Notas |
+|---|--------|-------------|-------|
+| C4 | `style(app): personalizar icono de la app` | Cualquiera | `ic_launcher_foreground.xml` usa el default de Android |
+| C5 | `style(ui): pulir diseño y recursos` | Cualquiera | Revisar colors, dimens, themes en todos los layouts |
+| C6 | `fix(lifecycle): verificar guardado y restauración de estado en rotación` | Cualquiera | `onSaveInstanceState` está en el código, pendiente de probar rotación |
+| C7 | `docs(readme): documentación final` | Cualquiera | README en el repo `app/` |
+| C8 | `chore(release): preparar versión de entrega` | Cualquiera | Revisar `versionName` en `build.gradle.kts` + tag `v2.0` |
 
 ### Ramas sugeridas
 ```
