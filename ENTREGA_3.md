@@ -116,13 +116,14 @@ Rama: `feature/recycler` y `feature/material`.
 | # | Commit | Responsable | Notas | Estado |
 |---|--------|-------------|-------|--------|
 | 1.1 | `refactor(hub): convertir HubFragment a RecyclerView con MaterialCardView` | Rafael | Crear `GameAdapter`, `list_item_game.xml` con DataBinding (`<variable name="game">`), `ViewHolder(binding)`. Modelo `GameInfo(id, name, iconRes, minPlayers, maxPlayers)` | ⬜ |
+| 1.1 | `refactor(hub): convertir HubFragment a RecyclerView con MaterialCardView` | Rafael | Crear `GameAdapter`, `list_item_game.xml` con DataBinding (`<variable name="game">`), `ViewHolder(binding)`. Modelo `GameInfo(id, name, iconRes, minPlayers, maxPlayers)` | ⬜ |
 | 1.2 | `feat(hub): añadir FloatingActionButton para modo LAN dentro de CoordinatorLayout` | Rafael | Snackbar de feedback al pulsar | ⬜ |
-| 1.3 | `style(theme): migrar a Theme.MaterialComponents.DayNight.DarkActionBar` | Diego | Definir `colorPrimary`, `colorSecondary`, `colorSurface` en `values/colors.xml` y `values-night/colors.xml` | ⬜ |
-| 1.4 | `style(ui): sustituir EditText por TextInputLayout + TextInputEditText en config de juegos` | Diego | `MindConfigFragment` y `AsConfigFragment` | ⬜ |
+| 1.3 | `style(theme): migrar a Theme.MaterialComponents.DayNight.DarkActionBar` | Rafael | Definir `colorPrimary`, `colorSecondary`, `colorSurface` en `values/colors.xml` y `values-night/colors.xml` | ⬜ |
+| 1.4 | `style(ui): sustituir EditText por TextInputLayout + TextInputEditText en config de juegos` | Rafael | `MindConfigFragment` y `AsConfigFragment` | ⬜ |
 | 1.5 | `style(ui): usar MaterialButtonToggleGroup para selección de dificultad en The Mind` | Rafael | `singleSelection=true`, listener `addOnButtonCheckedListener` | ⬜ |
 | 1.6 | `feat(themind): mostrar mano del jugador con RecyclerView` | Rafael | Ya hay lista de cartas; pasarla a RV con `list_item_card.xml` + DataBinding | ⬜ |
-| 1.7 | `feat(elas): mostrar jugadores activos con RecyclerView` | Diego | `list_item_player.xml` con vidas e indicador de turno | ⬜ |
-| 1.8 | `style(ui): aplicar textAppearance Material y elevation a tarjetas` | Diego | `?attr/textAppearanceTitleLarge`, `cardElevation`, `cardCornerRadius` | ⬜ |
+| 1.7 | `feat(elas): mostrar jugadores activos con RecyclerView` | Rafael | `list_item_player.xml` con vidas e indicador de turno | ⬜ |
+| 1.8 | `style(ui): aplicar textAppearance Material y elevation a tarjetas` | Rafael | `?attr/textAppearanceTitleLarge`, `cardElevation`, `cardCornerRadius` | ⬜ |
 
 ---
 
@@ -134,12 +135,12 @@ Rama: `feature/menu-prefs`.
 |---|--------|-------------|-------|--------|
 | 2.1 | `refactor(nav): unificar navegación en MainActivity con NavGraph único` | Diego | Eliminar `TheMindActivity` y `ElAsActivity`; un solo `MainActivity` con `NavHostFragment`. Las activities pasan a ser fragments dentro del mismo grafo | ⬜ |
 | 2.2 | `feat(nav): añadir BottomNavigationView con setupWithNavController` | Diego | Items: Hub, Historial, Ajustes. Menú `bottom_nav_menu.xml` | ⬜ |
-| 2.3 | `feat(nav): añadir DrawerLayout con NavigationView y cabecera personalizada` | Rafael | Alternativa al bottom nav para tablets; `nav_header.xml` con logo. Activable según `sw600dp` | ⬜ |
-| 2.4 | `feat(menu): toolbar con MenuProvider (compartir, settings, logout)` | Rafael | `MenuProvider` registrado en `onCreateView` de `HubFragment` y `HistoryFragment` | ⬜ |
+| 2.3 | `feat(nav): añadir DrawerLayout con NavigationView y cabecera personalizada` | Diego | Alternativa al bottom nav para tablets; `nav_header.xml` con logo. Activable según `sw600dp` | ⬜ |
+| 2.4 | `feat(menu): toolbar con MenuProvider (compartir, settings, logout)` | Diego | `MenuProvider` registrado en `onCreateView` de `HubFragment` y `HistoryFragment` | ⬜ |
 | 2.5 | `feat(settings): crear SettingsActivity con root_preferences.xml` | Diego | `SwitchPreferenceCompat` (modo oscuro, sonido), `ListPreference` (tema/idioma), `EditTextPreference` (alias del jugador) | ⬜ |
 | 2.6 | `feat(settings): persistir alias de jugador y tema con DefaultSharedPreferences` | Diego | Companion object con `getPlayerAlias`, `setPlayerAlias`, `getNightMode`. Aplicar `AppCompatDelegate.setDefaultNightMode` al cambiar | ⬜ |
 | 2.7 | `feat(settings): aplicar setDefaultValues en Application.onCreate` | Diego | `PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false)` | ⬜ |
-| 2.8 | `docs(readme): justificar uso de SharedPreferences para alias/tema vs Room para historial` | Rafael | En el README del repo `app/`: SP para datos pequeños clave-valor; Room para datos estructurados consultables | ⬜ |
+| 2.8 | `docs(readme): justificar uso de SharedPreferences para alias/tema vs Room para historial` | Diego | En el README del repo `app/`: SP para datos pequeños clave-valor; Room para datos estructurados consultables | ⬜ |
 
 ---
 
