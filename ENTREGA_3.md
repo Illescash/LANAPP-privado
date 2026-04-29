@@ -103,9 +103,9 @@ chore(scope): …
 
 | # | Commit | Responsable | Notas | Estado |
 |---|--------|-------------|-------|--------|
-| 0.1 | `chore(gradle): actualizar libs.versions.toml para E3 (room, firebase BOM, material, lifecycle)` | Diego | Añadir `room`, `firebase-bom`, `kotlinx-coroutines-play-services`, `kotlin-kapt` plugin | ⬜ |
-| 0.2 | `chore(git): crear rama develop y feature/* para E3` | Rafael | `develop` ← `main`; ramas `feature/recycler`, `feature/material`, `feature/menu-prefs`, `feature/room`, `feature/firebase`, `feature/lan` | ⬜ |
-| 0.3 | `docs(entrega3): añadir ENTREGA_3.md con plan de commits` | Diego | Este documento | ⬜ |
+| 0.1 | `chore(gradle): actualizar libs.versions.toml para E3 (room, firebase BOM, material, lifecycle)` | Diego | Añadir `room`, `firebase-bom`, `kotlinx-coroutines-play-services`, `kotlin-kapt` plugin | ✅ |
+| 0.2 | `chore(git): crear rama develop y feature/* para E3` | Rafael | `develop` ← `main`; ramas `feature/recycler`, `feature/material`, `feature/menu-prefs`, `feature/room`, `feature/firebase`, `feature/lan` | ✅ |
+| 0.3 | `docs(entrega3): añadir ENTREGA_3.md con plan de commits` | Diego | Este documento | ✅ |
 
 ---
 
