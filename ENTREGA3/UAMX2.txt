@@ -1,0 +1,2845 @@
+Ir al contenido principal
+En esta unidad vamos a ver cómo añadir listas de elementos de forma eficiente y dinámica. En lugar de una lista en un TextView, vamos a utilizar una vista que se comporta bien cuando hacemos scroll con grandes cantidades de datos.
+
+Se comporta bien porque, en lugar de crear vistas indiscriminadamente cuando nos desplazamos por la pantalla, lo hace reutilizando vistas de los ítems que salen de la pantalla.
+
+La nueva clase se denomina RecyclerView, que estudiaremos con detalle en los siguientes objetivos.
+
+De momento, te invitamos a que visites esta página de la documentación de Android, donde se explica con detalle el proceso que vamos a ir desgranando paso a paso en los siguientes objetivos de esta unidad.
+
+Esta clase forma parte de la biblioteca Jetpack y, para poder utilizarla, debes añadir una dependencia al fichero build.gradle del módulo de la aplicación ( Playground.app:)
+
+implementation 'androidx.recyclerview:recyclerview:1.3.0'
+Recuerda que mediante el menú File -> Project Structure de Android Studio, puedes consultar la última versión disponible en el momento de tu desarrollo.
+
+Ir al contenido principal
+RecyclerView es un ViewGroup que nos va a permitir agrupar vistas mientras que es como cualquier otro componente de la vista. 
+
+Para añadir un Recyclerview lo podemos hacer dentro de un layout cualquiera, como cualquier otro elemento (TextView, ButtonView, etc)
+
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/surprise_list_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
+
+    </RelativeLayout>
+
+</layout>
+La clase RecyclerView proporciona el "reciclador" y contenedor de vistas, pero para hacer esos cambios entre elementos necesita otras dos clases:
+
+ViewHolder será el contenedor de vistas que irá "reciclando" RecyclerView
+Adapter asociará los datos con las vistas del ViewHolder
+La vista recicladora encolverá la vista de cada elemento a listar dentro de un contenedor de vistas o ViewHolder. Esto facilita el reciclado, ya que el contenedor mantiene referencias a los elementos de la vista.
+
+En una clase para Playground en la que hagamos listas de sorpresas, quedaría algo así:
+
+class SurpriseHolder(view: View) : RecyclerView.ViewHolder(view)
+Fíjate en que el constructor de SurpriseHolder pasa una vista (view) al constructor de ViewHolder. Ésta es la vista que corresponde a cada ítem de la lista, y que es accesible mediante la propiedad itemView de ViewHolder. En el caso de Playground la vista va a ser simplemente un TextView. 
+
+Para usar adapter también haremos una clase que extienda Adapter. Al crear esta clase se incluirá SurpriseHolder como clase interna. 
+
+La clase RecyclerView no crea los ViewHolders directamente, sino que lo hace a través de la clase Adapter. Esta última clase es un intermediario entre la vista recicladora y el modelo, es decir, la lista de sorpresas.
+
+El adaptador no solo se va a encargar de crear ViewHolders cuando se necesiten, sino también de ligarlos con los datos de la sorpresa correspondiente.
+
+Añádelo en Playground creando una nueva clase en tu proyecto que sea SurpriseAdapter con el siguiente contenido:
+
+package com.example.playground
+
+import android.view.View
+import androidx.recyclerview.widget.RecyclerView
+
+class SurpriseAdapter: RecyclerView.Adapter<SurpriseAdapter.SurpriseHolder>() {
+    class SurpriseHolder(view: View) : RecyclerView.ViewHolder(view)
+}
+Ir al contenido principal
+El adaptador lleva a cabo su tarea a través de tres métodos fundamentales que hemos de implementar:
+
+onCreateViewHolder:  Se encarga de inflar el layout XML que define la apariencia de cada ítem de la lista. Se llama cuando el RecyclerView necesita crear una nueva celda (ViewHolder). Recibe el ViewGroup padre y el tipo de vista, y devuelve un nuevo objeto ViewHolder con la vista ya inflada.
+
+getItemCount: Devuelve el número total de elementos que contiene la lista de datos. El RecyclerView lo usa para saber cuántas celdas debe gestionar. Simplemente retorna el tamaño de la colección que alimenta al adaptador.
+
+onBindViewHolder: Se encarga de vincular los datos de un elemento concreto con las vistas del ViewHolder. Se llama cada vez que una celda va a mostrarse en pantalla, recibiendo el ViewHolder y la posición del elemento en la lista. Aquí es donde se asignan los valores (textos, imágenes, etc.) a los componentes del layout.
+
+Android studio sugiere crear estos métodos cuando creas la clase de Adapter, usa el IDE para crearlos:
+
+
+
+onCreateViewHolder
+Empezamos implementando el primero de todos, onCreateViewHolder, el método encargado de crear los contenedores de vistas que recicla RecyclerView.
+
+Para añadir un simple TextView añadimos lo siguiente:
+
+class SurpriseAdapter: RecyclerView.Adapter<SurpriseAdapter.SurpriseHolder>() {
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int
+    ): SurpriseHolder {
+        return SurpriseHolder(TextView(parent.context))
+    }
+getItemCount
+El método getItemCount en el caso de Playground queremos que devuelva el número de sorpresas de la lista. Para esto debe estar declarado en la clase de esta forma:
+
+
+class SurpriseAdapter: RecyclerView.Adapter<SurpriseAdapter.SurpriseHolder>() {
+var data = listOf<Surprise>()
+De forma que el método quedaría algo así:
+
+override fun getItemCount() = data.size
+onBindViewHolder
+El método onBindViewHolder tiene dos argumentos:
+
+holder: un SurpriseHolder donde colocar los datos de una sorpresa,
+position: la posición en la lista data de la sorpresa que hay que mostrar.
+
+override fun onBindViewHolder(
+    holder: SurpriseHolder,
+    position: Int
+) {
+    val item = data[position]
+    (holder.itemView as TextView).text = "${item.surpriseText} \n"
+}
+Fíjate en cómo se utiliza la propiedad itemView del ViewHolder. Se convierte en un TextView para mostrar los datos de la sorpresa item. Este TextView se creó previamente con el SurpriseHolder.
+
+El método utiliza el contenedor holder para mostrar la sorpresa data[position]. En ocasiones será un contenedor nuevo pero, y aquí está lo interesante, a menudo será un contenedor que ya ha sido utilizado previamente:
+
+
+Ir al contenido principal
+En la unidad anterior, cada ítem de la lista se reducía a un simple TextView en el que nos las arreglábamos para mostrar los dos textos de cada tarjeta.
+Para mejorar el aspecto de los ítems vamos a crear un fichero de diseño list_item_surprise.xml con una vista de TextView, donde se mostrará la sorpresa junto a un icono. 
+Para que en lugar de un texto sencillo, nuestra lista muestre este nuevo diseño, debemos cambiar el onCreate del adaptador:
+
+Solo con TextView	Usando list_item_surprise.xml
+override fun onCreateViewHolder(
+    parent: ViewGroup,
+    viewType: Int
+): SurpriseHolder {
+    return SurpriseHolder(TextView(parent.context))
+}
+override fun onCreateViewHolder(
+    parent: ViewGroup,
+    viewType: Int
+): SurpriseHolder {
+    val view = LayoutInflater.from(parent.context)
+        .inflate(R.layout.list_item_surprise, parent, false)
+    return SurpriseHolder(view)
+
+}
+Para continuar lo que necesitamos sería en el método onBindViewHolder añadir los cambios necesarios de la vista, algo así:
+
+override fun onBindViewHolder(holder: SurpriseHolder, position: Int) {
+    val surprise = data[position]
+    holder.itemView.findViewById<TextView>(R.id.textSurprise).text = surprise.surpriseText
+    holder.itemView.findViewById<ImageView>(R.id.iconSurprise).setImageResource(surprise.iconRes)
+    holder.itemView.setOnClickListener {
+        Toast.makeText(it.context, surprise.surpriseText, Toast.LENGTH_SHORT).show()
+    }
+}
+Pero para hacer esto necesitamos acceder a cada elemento uno a uno con findViewById. Para ahorrarnos esto vamos a ver en la siguiente unidad cómo hacer esto con DataBinding.
+
+Ir al contenido principal
+Para mantener el binding con viewModel que veníamos usando, vamos a dárselo al adapter en el momento en el que lo instanciamos:
+
+package com.example.playground
+...
+
+class SurpriseListFragment : Fragment() {
+    private lateinit var adapter: SurpriseAdapter
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        // Ocultar ActionBar
+        (activity as AppCompatActivity).supportActionBar?.hide()
+        val binding = DataBindingUtil.inflate<FragmentSurpriseListBinding>(
+            inflater,
+            R.layout.fragment_surprise_list,
+            container,
+            false
+        )
+
+        val viewModel: MainViewModel by activityViewModels()
+
+        adapter = SurpriseAdapter()
+        adapter.data = viewModel.getAllSurprises()
+        binding.surpriseListRecyclerView.adapter = adapter
+
+        return binding.root
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Volver a mostrarla al salir
+        (activity as AppCompatActivity).supportActionBar?.show()
+    }
+}
+Como ahora estamos usando además un contenedor aparte para cada elemento de la lista, debemos, como en cualquier otro fichero de diseño, utilizar layout y definir la clase a la que se asocia data:
+
+list_item_surprise.xml
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
+   <data>
+        <variable
+            name="surprise"
+            type="com.example.playground.Surprise" />
+   </data>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+       ....>
+
+        <ImageView
+            ....>
+
+        <TextView
+          ....>
+
+    </LinearLayout>
+</layout>
+Lo siguiente que necesitamos es declarar la propiedad binding en nuestra clase Adapter para inicializarla en onCreateViewHolder:
+
+El tipo de binding es el tipo de dato de vinculación creado automáticamente por Android para el fichero list_item_surprise.xml, es decir, ListItemSurpriseBinding.
+
+A continuación, dentro de onCreateViewHolder, debes inflar el fichero de diseño con el método inflate del tipo ListItemSurpriseBinding. Compara esta versión del método onCreateViewHolder con la versión sin binding:
+
+Versión sin binding	Versión con binding
+override fun onCreateViewHolder(
+    parent: ViewGroup,
+    viewType: Int
+): SurpriseHolder {
+    val view = LayoutInflater.from(parent.context)
+        .inflate(R.layout.list_item_surprise, parent, false)
+    return SurpriseHolder(view)
+}
+override fun onCreateViewHolder(
+    parent: ViewGroup,
+    viewType: Int
+): SurpriseHolder {
+    val layoutInflater = LayoutInflater.from(parent.context)
+    val binding = ListItemSurpriseBinding.inflate(
+        layoutInflater, parent, false
+    )
+    return SurpriseHolder(binding)
+}
+Si ejecutas el proyecto en este momento, no podrás ver la lista de sorpresas en la pantalla. Todavía tenemos que cerrar un par de detalles.
+
+Fíjate en que ahora onCreateViewHolder pasa el objeto binding directamente al constructor de SurpriseHolder, en lugar de la view. Esto es clave para que cada holder tenga su propia referencia de binding independiente.
+
+Declara SurpriseHolder recibiendo el binding en el constructor. La vista raíz (binding.root) se pasa al RecyclerView.ViewHolder como hasta ahora:
+
+inner class SurpriseHolder(private val binding: ListItemSurpriseBinding)
+    : RecyclerView.ViewHolder(binding.root)
+La clase SurpriseHolder se reduce al método bind, que se simplifica considerablemente. Sin data binding deberíamos declarar una propiedad por cada elemento y buscarlo con findViewById.
+
+Lo único que necesitamos es asignar el objeto sorpresa al dato de vinculación surprise del binding:
+
+inner class SurpriseHolder(private val binding: ListItemSurpriseBinding)
+    : RecyclerView.ViewHolder(binding.root) {
+
+    fun bind(surprise: Surprise) {
+        binding.surprise = surprise
+    }
+}
+¿Por qué pasamos el binding por el constructor en lugar de guardarlo con private var local = binding?
+
+Puede parecer que hacer private var local = binding dentro del holder guarda una copia propia para cada elemento. Sin embargo, no es así: en el momento en que se ejecuta esa línea, binding es una propiedad del adapter que se sobreescribe en cada llamada a onCreateViewHolder. Todos los holders acabarían apuntando al último binding creado.
+
+Al pasar el binding como parámetro del constructor, cada holder recibe y almacena su propia instancia en el momento de su creación, antes de que el adapter cree el siguiente:
+
+
+onCreateViewHolder → crea binding1 → SurpriseHolder(binding1)
+
+onCreateViewHolder → crea binding2 → SurpriseHolder(binding2)
+
+onCreateViewHolder → crea binding3 → SurpriseHolder(binding3)
+
+Con local = binding, en cambio, tras las tres llamadas todos los holders verían binding3 .
+
+Por último, el onBindViewHolder simplemente delega en el método bind de cada holder:
+
+override fun onBindViewHolder(
+    holder: SurpriseHolder,
+    position: Int
+) {
+    holder.bind(data[position])
+}
+Ir al contenido principal
+Vamos a añadir un Fragmento con la lista de sorpresas al que vayamos desde SurpriseFragment
+
+1. Lo primero vamos a modificar fragment_surprise.xml para añadir un botón que nos lleve al nuevo fragmento
+
+Añadimos un botón al final de la vista
+Añadimos un listener directamente desde el xml, para ello deberemos importar Navigation.
+Añadir el fragmento a navigation.xml y crear una nueva acción desde SurpriseFragment a SurpriseListFragment.
+Nos quedará algo así
+
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <data>
+        <import type="android.view.View"/>
+        <import type="androidx.navigation.Navigation"/>
+        <import type="com.example.playground.R"/>
+        <variable
+            name="viewModel"
+            type="com.example.playground.MainViewModel" />
+    </data>
+
+    <RelativeLayout...>
+
+        <TextView...>
+
+        <TextView...>
+
+        <Button...>
+
+        <LinearLayout
+            ...>
+       
+        <Button
+            android:id="@+id/surprise_list_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="16dp"
+            android:text="Ver todas las sorpresas"
+            android:onClick="@{Navigation.createNavigateOnClickListener(R.id.action_surpriseFragment_to_surpriseListFragment)}" />
+    </RelativeLayout>
+</layout>
+SurpriseListFragment nos quedaría así:
+
+package com.example.playground
+...
+
+class SurpriseListFragment : Fragment() {
+    private lateinit var adapter: SurpriseAdapter
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        // Ocultar ActionBar
+        (activity as AppCompatActivity).supportActionBar?.hide()
+        val binding = DataBindingUtil.inflate<FragmentSurpriseListBinding>(
+            inflater,
+            R.layout.fragment_surprise_list,
+            container,
+            false
+        )
+
+        val viewModel: MainViewModel by activityViewModels()
+
+        adapter = SurpriseAdapter()
+        adapter.data = viewModel.getAllSurprises()
+        binding.surpriseListRecyclerView.adapter = adapter
+
+        return binding.root
+    }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Volver a mostrarla al salir
+        (activity as AppCompatActivity).supportActionBar?.show()
+    }
+}
+2. Vamos a modificar Surprise para poner algún elemento extra y poder probar un RecyclerView más complejo que un simple texto como hemos visto.
+
+Podemos añadir por ejemplo un icono:
+
+
+data class Surprise(
+    val mainText: String = "Pulsa el botón",
+    val surpriseText: String = "SORPRESA",
+    val description: String = "Una descripción increíble", // Nuevo
+    val iconRes: Int = android.R.drawable.ic_menu_help,    // Nuevo
+    var isSurpriseVisible: Boolean = false
+) {
+...
+}
+3. Asegurate ahora de tener vinculado el adapter al binding de viewModel de SurpriseListFragment
+
+
+class SurpriseListFragment : Fragment() {
+    private lateinit var adapter: SurpriseAdapter
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        // Ocultar ActionBar
+        (activity as AppCompatActivity).supportActionBar?.hide()
+        val binding = DataBindingUtil.inflate<FragmentSurpriseListBinding>(
+            inflater,
+            R.layout.fragment_surprise_list,
+            container,
+            false
+        )
+
+        val viewModel: MainViewModel by activityViewModels()
+
+        adapter = SurpriseAdapter()
+        binding.surpriseListRecyclerView.adapter = adapter
+        adapter.data = viewModel.getAllSurprises()
+
+        return binding.root
+    }
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Volver a mostrarla al salir
+        (activity as AppCompatActivity).supportActionBar?.show()
+    }
+}
+Loggeando RecyclerView
+Status
+Esta tarea está cerrada. Una o más fechas límites para esta tarea han pasado. Recibirá un nota de incompleto para esta tarea.
+
+
+Su respuesta.
+due 9 de abr. de 2026 20:00 CEST (in 0 minutos)
+Incompleto
+ 
+Calificación del Personal de soporte
+No disponible
+Su Nota: No Comenzado
+Ir al contenido principal
+Con todo esto ya puedes crear listas personalizadas en vuestra aplicación.
+
+No dudéis en hacer diseños diferentes a lo que hemos visto.
+
+RecyclerView no solo sirve para listas sino para cuadrículas, así que aprovecha esta herramienta para hacer el diseño que necesites. 
+
+Ir al contenido principal
+Material Design es una guía integral para el diseño visual, de movimiento y de interacción en distintas plataformas y dispositivos.
+android.
+
+Esto es toda una filosofía de diseño, así que te recomendamos revisarlo a fondo para integrarlo en tu app. 
+
+Para utilizarlo se debe añadir la dependencia en build.gradle:
+
+plugins { ... }
+
+...
+
+dependencies {
+
+...
+
+implementation 'com.google.android.material:material:1.8.0'
+
+implementation 'androidx.cardview:cardview:1.0.0'
+
+}
+
+Estas son algunas de las cosas que permite Material Design.
+
+Tema y widgets
+Android proporciona un tema de app de Material Design para aplicar estilo a todos los widgets de IU, además de widgets para vistas complejas como listas y tarjetas.
+
+Algunos patrones habituales de su uso son el botón de acción flotante (BAF) para promover la acción principal, la barra de la app para mostrar navegación y búsqueda, y el panel lateral de navegación.
+
+Elevación y sombras
+
+Además de las propiedades X e Y, las vistas en Android tienen una propiedad Z que representa la elevación de una vista. Esta propiedad determina el tamaño de su sombra: las vistas con valores Z más altos proyectan sombras más grandes, y también aparecen encima de otras vistas.
+
+Por ejemplo, este patrón de diseño otorga elevación a las vistas, y la sombra que proyectan depende del valor Z asignado.
+
+
+Animaciones
+Las APIs de animación permiten crear animaciones personalizadas para la respuesta táctil en los controles de la IU, cambios en el estado de la vista y transiciones de actividades.
+Entre ellas destacan las animaciones de respuesta táctil, el efecto revelar circular, las transiciones entre actividades y el movimiento curvo.
+
+
+Elementos de diseño
+Los elementos de diseño vectoriales son escalables sin perder definición y son perfectos para íconos de apps de un solo color. Además, el ajuste de tono permite definir mapas de bits como máscara alfa y ajustar el color en tiempo de ejecución, y la extracción de color permite obtener automáticamente colores destacados de una imagen de mapa de bits.
+
+Ir al contenido principal
+Coordinator Layout es un tipo de vista que nos va a permitir coordinar de manera dinámica los elementos que tenemos.
+
+Por ejemplo, para combinar una RelativeLayout junto con una vista de un botón de acción flotante
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/surprise_list_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
+        </RelativeLayout>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/new_surprise_fab"
+            style="@style/Widget.Design.FloatingActionButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="20dp"
+            android:src="@drawable/baseline_add_circle_outline_24"
+            android:contentDescription="@string/new_surprise_fab_description" />
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+</layout>
+Recuerda que para crear un recurso vectorial debes pulsar New -> Vector Asset con el botón derecho del ratón sobre la carpeta drawable, y buscar una imagen apropiada.
+
+
+
+Coordinator Layout
+0.0 / 1.0 punto (sin calificar)
+El botón flotante
+Para poner de manifiesto la coordinación que lleva a cabo el contenedor CoordinatorLayoout, vamos a mostrar un elemento Snackbar cuando se pulse el botón flotante.
+
+Se trata de una ventana flotante que aparece temporalmente en la parte inferior de la pantalla para proporcionar información al usuario:
+
+Snackbar.make(it, resources.getString(R.string.added_card), Snackbar.LENGTH_SHORT).show()
+
+El constructor de este elemento, como ves en el código superior, necesita tres argumentos:
+una vista,
+un texto, obtenido a partir de un recurso, para que se muestre de acuerdo con el lenguaje del dispositivo,
+una constante entera que indica la duración de la presentación.
+Edita el fragmento SurpriseListFragment, accede a la referencia del botón flotante, y añádele un escuchador OnClickListener. La lambda del escuchador se debe encargar de crear el elemento Snackbar y mostrarlo con el método show.
+¿Qué ocurre al pulsar el botón flotante?
+Señala cuáles de las siguientes acciones realiza CoordinatorLayout
+
+
+Desplaza el botón flotante hacia arriba para que no quede tapado por Snackbar
+
+Oculta el botón flotante mientras el Snackbar está visible de forma automática
+
+Sitúa el Snackbar en la mejor posición para que no tape nada
+
+Coordina la animación de entrada y salida del Snackbar
+sin responder
+Enviar
+Algunos problemas tienen opciones como guardar, restablecer, sugerencias o mostrar respuesta. Estas opciones aparecen después de oprimir el botón Enviar.
+Ir al contenido principal
+Podemos mejorar también la vista de cada elemento de un recycler view utilizando la vista MaterialCardView.
+
+Puedes utilizar el atributo android:textAppearance de los elementos TextView, para dar formato a tu gusto a los textos de las vistas.
+
+MaterialCardView es un contenedor que aplica automáticamente elevación, esquinas redondeadas y sombra siguiendo las especificaciones de Material Design. Basta con envolver el contenido de nuestro ítem en ella:
+
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <data>
+        <variable
+            name="surprise"
+            type="com.example.playground.model.Surprise" />
+    </data>
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:id="@+id/iconSurprise"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:contentDescription="Icono del elemento" />
+
+            <TextView
+                android:id="@+id/textSurprise"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:text="@{surprise.surpriseText}"
+                android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+</layout>
+Los cambios más destacados respecto a la versión anterior son los siguientes:
+
+MaterialCardView envuelve el LinearLayout y le aporta sombra (cardElevation) y esquinas redondeadas (cardCornerRadius) de forma automática.
+Se añade android:layout_margin a la tarjeta para que los ítems no queden pegados entre sí en el listado.
+En el TextView se sustituyen textSize y textColor por android:textAppearance="?attr/textAppearanceBodyLarge", que delega el estilo al tema de Material Design activo en la app, respetando así el modo oscuro y cualquier personalización del tema de forma consistente.
+MaterialCardView
+0.0 / 1.0 punto (sin calificar)
+En el ejemplo anterior, ¿qué campo hay que cambiar para modificar el tamaño del texto?
+  sin responder 
+Enviar
+Algunos problemas tienen opciones como guardar, restablecer, sugerencias o mostrar respuesta. Estas opciones aparecen después de oprimir el botón Enviar.
+Ir al contenido principal
+TextInputLayout es un contenedor de Material Design que envuelve un campo de texto para enriquecerlo visualmente y mejorar la experiencia del usuario. Se usa siempre en combinación con TextInputEditText en su interior, nunca con un EditText ordinario.
+
+Puedes usarlo siempre que necesites un campo de texto en un formulario. Aporta ventajas que EditText no tiene por sí solo: el texto de ayuda (hint) no desaparece al escribir, sino que se desplaza hacia arriba animadamente como etiqueta flotante, lo que permite al usuario recordar qué dato debe introducir en todo momento. Además, facilita mostrar mensajes de error o de ayuda secundarios justo debajo del campo.
+
+La estructura básica es siempre la misma: TextInputLayout actúa como contenedor y TextInputEditText como campo de entrada.
+
+<com.google.android.material.textfield.TextInputLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:hint="Pregunta">
+
+    <com.google.android.material.textfield.TextInputEditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</com.google.android.material.textfield.TextInputLayout>
+El atributo android:hint se coloca en el TextInputLayout, no en el TextInputEditText. Así es el contenedor quien gestiona la animación de la etiqueta flotante.
+
+Si además quieres mostrar un mensaje de error desde el código de tu fragmento o actividad, puedes hacerlo así:
+
+textInputLayout.error = "Este campo es obligatorio"
+Y para limpiarlo una vez el usuario corrija el valor:
+
+textInputLayout.error = null
+Ir al contenido principal
+Los grupos de botones de Material Design permiten agrupar varias opciones de forma visualmente coherente y coordinada. El contenedor MaterialButtonToggleGroup organiza botones relacionados en una sola unidad, dejando claro al usuario que pertenecen a una misma acción o decisión.
+
+Úsalo cuando tengas dos o más acciones o estados mutuamente relacionados que el usuario deba elegir o confirmar, como por ejemplo aceptar o cancelar una operación, seleccionar un modo entre varias opciones, o filtrar contenido por categorías. Es preferible a colocar botones sueltos cuando la relación entre ellos es semántica, ya que el agrupamiento comunica visualmente que forman parte de una misma decisión.
+
+La estructura básica coloca cada MaterialButton dentro del contenedor MaterialButtonToggleGroup:
+
+<com.google.android.material.button.MaterialButtonToggleGroup
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <com.google.android.material.button.MaterialButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Aceptar" />
+
+    <com.google.android.material.button.MaterialButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cancelar" />
+
+</com.google.android.material.button.MaterialButtonToggleGroup>
+
+Si quieres que solo pueda seleccionarse un botón a la vez, activa el modo de selección única con el atributo app:singleSelection="true". Para reaccionar a los cambios de selección desde el código:
+
+toggleGroup.addOnButtonCheckedListener { group, checkedId, isChecked ->
+    if (isChecked) {
+        // actuar según el botón seleccionado
+    }
+}
+
+
+LinearLayout o ToggleGroup
+Puede que este tipo de vista te suene muy parecida a LinearLayout, de hecho la vista de 3 botones que hicimos al inicio la hicimos con LynearLayout, pudiendo haber conseguido un resultado parecido con ToggleGroup.
+
+Aunque ambos permiten colocar botones uno junto al otro, sirven para propósitos distintos.
+
+Usa LinearLayout cuando los botones sean acciones independientes sin relación semántica entre sí, cuando necesites un control preciso sobre márgenes, pesos o alineación individuales, o cuando los elementos del interior no sean exclusivamente botones.
+
+Usa MaterialButtonToggleGroup cuando los botones representen opciones de una misma decisión, cuando quieras que el sistema gestione automáticamente cuál está seleccionado, o cuando busques la apariencia unificada y cohesionada que proporciona Material Design para este tipo de controles. El grupo se encarga internamente de los bordes compartidos y el aspecto visual conjunto, algo que con LinearLayout tendrías que resolver manualmente.
+
+Blank Problem
+0 puntos posibles (sin calificar)
+Mostrar respuesta
+Enviar
+Algunos problemas tienen opciones como guardar, restablecer, sugerencias o mostrar respuesta. Estas opciones aparecen después de oprimir el botón Enviar.
+Ir al contenido principal
+Revisa tu proyecto, teniendo en cuenta las siguientes preguntas:
+
+¿Qué elementos has incluido por el momento?
+¿Cuáles puedes adaptar conociendo Material Design?
+¿Hay algo de Material Design que no conocieras que puedas añadir?
+Analiza todo esto y desarrolla en tu proyecto el diseño teniendo en cuenta esta filosofía.
+
+Asegúrate siempre de conocer y saber justificar por qué añades cada tipo de vista o elemento. 
+
+Ir al contenido principal
+DrawerLayout es un contenedor de Material Design que implementa el patrón de navegación lateral, también conocido como navigation drawer. Permite al usuario acceder a las distintas secciones de la aplicación deslizando el dedo de izquierda a derecha sobre la pantalla, o pulsando el icono de menú en la barra superior.
+
+
+
+Se suele incluir en aplicaciones con varias secciones o destinos de navegación de nivel superior y para que el usuario pueda moverse entre ellos sin perder el contexto de la pantalla actual. Es especialmente adecuado cuando el espacio en pantalla es limitado y no quieres dedicar parte del layout permanente a una barra de navegación visible. Si la app tiene pocas secciones y el espacio lo permite, una BottomNavigationView puede ser más accesible, ya que el usuario no necesita conocer el gesto de deslizamiento.
+
+La estructura básica envuelve el contenido principal de la pantalla y el panel lateral dentro del mismo DrawerLayout:
+
+<androidx.drawerlayout.widget.DrawerLayout
+    android:id="@+id/drawerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Contenido principal de la pantalla -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Panel lateral -->
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/navigationView"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        app:menu="@menu/navdrawer_menu" />
+
+</androidx.drawerlayout.widget.DrawerLayout>
+
+El atributo android:layout_gravity="start" en el NavigationView indica que el panel se despliega desde el lado izquierdo. El atributo app:menu apunta al fichero de menú que define los ítems de navegación.
+
+El fichero de menú
+Cada destino de navegación se define como un <item> dentro de un fichero XML en la carpeta res/menu. Cada ítem lleva un identificador, un icono y un título:
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@id/surpriseListFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_list_alt_24"
+        android:title="@string/surprise_list_nav_menu_title" />
+
+    <item
+        android:id="@id/surpriseFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_play_circle_filled_24"
+        android:title="@string/surprise_nav_menu_title" />
+
+    <item
+        android:id="@+id/statisticsFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_assessment_24"
+        android:title="@string/statistics_nav_menu_title" />
+
+</menu>
+Fíjate en que los identificadores de los dos primeros ítems usan @id/ en lugar de @+id/, lo que significa que reutilizan IDs ya definidos en el grafo de navegación. El tercer ítem usa @+id/ porque crea un identificador nuevo. Los títulos deben definirse en strings.xml para que la app respete el idioma del dispositivo, y los iconos se crean como vector assets desde Android Studio con New → Vector Asset.
+
+Reaccionar a la selección desde el código
+Para navegar al fragmento correspondiente cuando el usuario pulsa un ítem, escucha los eventos del NavigationView en tu actividad:
+
+navigationView.setNavigationItemSelectedListener { menuItem ->
+    menuItem.isChecked = true
+    drawerLayout.closeDrawers()
+    // navegar al destino correspondiente
+    true
+}
+La cabecera del cajón
+El NavigationView permite añadir una zona de cabecera en la parte superior del cajón de navegación, por encima de los ítems del menú. Es un espacio habitual para mostrar el logotipo de la app, el nombre del usuario o cualquier imagen representativa.
+
+La cabecera es simplemente un fichero de layout independiente, por ejemplo nav_header.xml. Puede contener cualquier vista, aunque lo más habitual es un ConstraintLayout con un ImageView:
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="180dp"
+    android:background="?attr/colorPrimary">
+
+    <ImageView
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        app:srcCompat="@drawable/ic_logo"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+Fíjate en que la imagen se asocia mediante app:srcCompat en lugar de android:src, lo que garantiza la compatibilidad con recursos vectoriales en versiones anteriores de Android.
+
+Una vez creado el fichero de cabecera, basta con referenciarlo en el atributo app:headerLayout del NavigationView:
+
+<com.google.android.material.navigation.NavigationView
+    android:id="@+id/navView"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:layout_gravity="start"
+    app:headerLayout="@layout/nav_header"
+    app:menu="@menu/navdrawer_menu" />
+
+El resultado es un cajón que muestra la cabecera personalizada en la parte superior, seguida automáticamente de los ítems del menú definidos en navdrawer_menu.xml. Puedes adaptar el diseño de la cabecera con tu propia imagen, colores o textos para darle a la app una identidad visual más cuidada.
+
+Calificación de respuestas abiertas
+Status
+Esta tarea está cerrada. Una o más fechas límites para esta tarea han pasado. Recibirá un nota de incompleto para esta tarea.
+
+
+Su respuesta.
+due 24 de abr. de 2026 20:00 CEST (in 0 minutos)
+Incompleto
+
+Evalúe su respuesta
+due 1 de ene. de 2029 01:00 CET (in 2 años, 8 meses)
+No disponible
+Su Nota: No Comenzado
+Los identificadores
+Una de las características más útiles de DrawerLayout combinado con el componente de navegación de Android es que la navegación entre fragmentos ocurre de forma automática, sin necesidad de escribir código explícito para cada transición.
+
+El sistema de navegación conecta los ítems del menú del cajón con los destinos del grafo de navegación a través de sus identificadores. Cuando el usuario pulsa un ítem del menú, el componente de navegación busca un destino cuyo id coincida con el del ítem pulsado y navega a él automáticamente.
+
+Para que esto funcione, los id de los ítems en navdrawer_menu.xml deben ser exactamente los mismos que los id de los fragmentos destino en navigation.xml. Por eso los ítems del menú usan @id/ en lugar de @+id/: los identificadores se crean en el fichero de navegación y simplemente se referencian en el menú.
+
+Ejemplo
+
+Si añadimos un fragmento de estadísticas se declara en navigation.xml creando su identificador con @+id/:
+
+<fragment
+    android:id="@+id/statisticsFragment"
+    android:name="com.example.playground.StatisticsFragment"
+    android:label="StatisticsFragment"
+    tools:layout="@layout/fragment_statistics" />
+Y en navdrawer_menu.xml se referencia ese mismo identificador con @id/:
+
+<item
+    android:id="@id/statisticsFragment"
+    android:enabled="true"
+    android:icon="@drawable/ic_baseline_assessment_24"
+    android:title="@string/statistics_nav_menu_title" />
+Al coincidir ambos id, el componente de navegación sabe que al pulsar ese ítem debe navegar a StatisticsFragment, sin que el desarrollador tenga que escribir ninguna acción de navegación adicional.
+
+Resumen del flujo de identificadores
+
+El identificador nace en navigation.xml con @+id/, se reutiliza en navdrawer_menu.xml con @id/, y el componente de navegación se encarga de conectar ambos en tiempo de ejecución.
+
+Ir al contenido principal
+NavigationBar es un componente de Material Design que muestra una barra de navegación fija en la parte inferior de la pantalla. Permite al usuario moverse entre las secciones principales de la aplicación con un solo toque, sin necesidad de ningún gesto adicional.
+
+Se suele incluir en aplicaciones con entre tres y cinco destinos de navegación de nivel superior. Es especialmente adecuada cuando quieres que las secciones principales sean siempre visibles y accesibles, sin que el usuario tenga que descubrir un gesto o buscar un icono de menú. Si la app tiene muchas secciones o necesitas ahorrar espacio en pantalla, un DrawerLayout puede ser más apropiado.
+
+La estructura básica coloca el NavigationBarView en la parte inferior del layout de la actividad principal, normalmente dentro de un CoordinatorLayout o un ConstraintLayout:
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Contenido principal de la pantalla -->
+    <FragmentContainerView
+        android:id="@+id/navHostFragment"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottomNav" />
+
+    <!-- Barra de navegación inferior -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:menu="@menu/bottom_nav_menu" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+El atributo app:menu apunta al fichero de menú que define los ítems de la barra. El FragmentContainerView ocupa todo el espacio disponible por encima de la barra gracias a las restricciones de ConstraintLayout.
+
+El fichero de menú
+Al igual que con el DrawerLayout, cada destino se define como un <item> en un fichero XML dentro de la carpeta res/menu. Los identificadores deben coincidir con los de los fragmentos destino en el grafo de navegación para que la navegación funcione de forma automática:
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@id/surpriseListFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_list_alt_24"
+        android:title="@string/decks_nav_menu_title" />
+
+    <item
+        android:id="@id/surpriseFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_play_circle_filled_24"
+        android:title="@string/study_nav_menu_title" />
+
+    <item
+        android:id="@+id/statisticsFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_baseline_assessment_24"
+        android:title="@string/statistics_nav_menu_title" />
+
+</menu>
+Al igual que en el cajón de navegación, los identificadores de los ítems deben coincidir con los de los destinos en navigation.xml. Los dos primeros usan @id/ porque sus IDs ya están creados en el grafo de navegación, mientras que el tercero usa @+id/ si es un destino nuevo. Los títulos se definen en strings.xml y los iconos se crean como vector assets desde New → Vector Asset.
+
+Conectar la barra con el componente de navegación
+Para que la barra inferior navegue automáticamente al fragmento correspondiente al pulsar cada ítem, basta con conectarla al controlador de navegación desde el código de la actividad:
+
+val navController = findNavController(R.id.navHostFragment)
+val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)
+bottomNav.setupWithNavController(navController)
+Con esta única llamada a setupWithNavController, la barra gestiona automáticamente qué ítem aparece seleccionado según el fragmento activo, y navega al destino correspondiente al pulsar cada opción, sin necesidad de escribir ningún listener manualmente.
+
+Ir al contenido principal
+El propósito de esta unidad es que aprendas a utilizar el menú asociado a una actividad o fragmento, y a colocar elementos del menú sobre la barra de acción de la aplicación.
+
+
+
+
+2. LA BARRA DE ACCIÓN
+Ampliar
+La barra de acción
+La barra de acción o de herramientas (toolbar) se encuentra en la parte superior de la pantalla y contiene, principalmente, los siguientes elementos:
+el título de la actividad a la izquierda,
+los ítems de acción, que son ciertos ítems del menú (del que hablaremos enseguida) que se muestran sobre la barra,
+el menú de desborde, los tres puntos verticales a la derecha del todo, que permiten desplegar el conjunto de los ítems del menú que no se pueden mostrar sobre la barra:
+
+
+Aunque la barra de acción fue añadida en Android 5.0, cualquier actividad que extienda AppCompat cuenta con una barra que se puede utilizar desde Android 2.1 en adelante.
+
+Para alcanzar esta compatibilidad, Android Studio utiliza un estilo heredado de DarkActionBar en el fichero themes.xml:
+
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.Playground" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        ...
+    </style>
+</resources>
+Si, por ejemplo, editaramos el fichero themes.xml y sustituyendo el estilo parent como sigue:
+<style name="Theme.Playground" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+La barra de acción desaparecería por completo.
+Para construir el menu correspondiente a una actividad o fragmento, debemos crear un xml con el mismo nombre, dentro de la carpeta menu. Por ejemplo, para TitleActivity, su nombre será activity_title.xml. Este fichero no se confunde con el fichero de diseño de la actividad pues se sitúa en la carpeta res/menu, en lugar de la carpeta res/layout.
+Igual que en drawable, dentro del menú pondremos cada elemento mediante "item"
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/settings"
+        android:icon="@android:drawable/ic_menu_manage"
+        android:title="@string/settings_menu_title"
+        app:showAsAction="ifRoom|withText"/>
+
+    <item
+        android:id="@+id/log_out"
+        android:icon="@android:drawable/ic_lock_power_off"
+        android:title="@string/logout_menu_title"
+        app:showAsAction="always|withText" />
+
+</menu>
+Los atributos de cada elemento item son los siguientes:
+
+id, para identificar el ítem pulsado en el código kotlin del fragmento,
+icon, imagen del ítem cuando no se ve el texto,
+title, texto asociado al ítem, que se verá al pulsar el menú de desborde,
+showAsAction, atributo que controla cómo se muestra el ítem sobre la barra de herramientas.
+El atributo showAsAction
+El atributo showAsAction controla cómo se muestra cada ítem del menú en la barra superior de la app. Se escribe con el espacio de nombres app: en lugar de android: por razones de compatibilidad con versiones anteriores de Android a través de la biblioteca AppCompat.
+
+Vamos a ver algunos de los valores que puede tomar:
+
+never hace que el ítem aparezca siempre en el menú desplegable de tres puntos, nunca directamente en la barra. Es la opción adecuada para acciones secundarias o poco frecuentes:
+
+<item
+    android:id="@+id/about"
+    android:icon="@drawable/ic_info"
+    android:title="Acerca de"
+    app:showAsAction="never" />
+
+always fuerza que el ítem aparezca siempre como icono en la barra, independientemente del espacio disponible. Debe usarse con moderación y solo para la acción más importante, ya que colocar demasiados ítems con always puede solapar el contenido:
+
+<item
+    android:id="@+id/search"
+    android:icon="@drawable/ic_search"
+    android:title="Buscar"
+    app:showAsAction="always" />
+ifRoom muestra el ítem en la barra solo si hay espacio suficiente. Si no lo hay, cae automáticamente al menú desplegable. Es el valor más equilibrado y el más recomendado en la mayoría de casos:
+
+<item
+    android:id="@+id/filter"
+    android:icon="@drawable/ic_filter"
+    android:title="Filtrar"
+    app:showAsAction="ifRoom" />
+withText puede combinarse con ifRoom o always usando el operador |. Cuando hay espacio suficiente, muestra tanto el icono como el texto del título junto a él. Su efecto se aprecia especialmente en modo apaisado, donde el ancho de la pantalla permite mostrar ambos elementos simultáneamente:
+
+<item
+    android:id="@+id/settings"
+    android:icon="@android:drawable/ic_menu_manage"
+    android:title="Ajustes"
+    app:showAsAction="ifRoom|withText" />
+collapseActionView se utiliza junto con vistas de acción expandibles, como una barra de búsqueda. El ítem aparece como un icono compacto en la barra y al pulsarlo se expande para mostrar la vista completa, por ejemplo un campo de texto:
+
+<item
+    android:id="@+id/action_search"
+    android:icon="@drawable/ic_search"
+    android:title="Buscar"
+    app:showAsAction="ifRoom|collapseActionView"
+    app:actionViewClass="androidx.appcompat.widget.SearchView" />
+Resumen
+
+Valor		Comportamiento
+never		Siempre en el menú desplegable
+always		Siempre visible en la barra
+ifRoom		En la barra si hay espacio, si no en el menú
+withText		Añade el texto junto al icono cuando hay espacio
+collapseActionView		Icono que se expande en una vista de acción
+Inflar el menú desde la actividad
+Para inflar el código del menú tendremos que modificar la actividad o fragmento correspondiente:
+
+class TitleActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityTitleBinding
+
+    override fun onCreate(savedInstanceState: Bundle?) { ... }
+
+    
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.activity_title, menu)
+        return true
+    }
+
+   
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.settings -> {
+                // Aquí irá el código para arrancar las preferencias de la app 
+            }
+        }
+    return false
+}
+    ...
+}
+
+Los dos métodos clave de la actividad son:
+
+onCreateOptionsMenu, para inflar el menú especificado en el fichero de diseño,
+onOptionsItemSelected, para responder a las pulsaciones de los ítems del menú.
+Inflar el menú desde Fragmentos
+Para inflar y reaccionar al menú del fragmento vamos a utilizar la interfaz MenuProvider. Para ello, es necesario añadir la siguiente dependencia al fichero build.gradle.kts (Module :app):
+implementation("androidx.activity:activity-ktx:1.8.1")
+Utilizaremos el hecho de que la clase ComponentActivity implementa la interfaz MenuProvider, con el siguiente conjunto de métodos, algunos de los cuales ya nos suenan:
+onPrepareMenu, para gestionar la visibilidad de los ítems del menú,
+onCreateMenu, para inflar la interfaz del menú de opciones,
+onMenuItemSelected, para responder a las pulsaciones de los ítems,
+onMenuClosed, para responder al cierre del menú.
+El método setupMenu añade a la actividad un objeto que implementa la interfaz MenuProvider. No olvides llamar a este método dentro del método onCreate del fragmento.
+
+class SurpriseListFragment : Fragment() {
+  
+ ...
+    override fun onCreateView( ... ): View {
+        ...
+        setupMenu()
+
+        return binding.root
+    }
+
+    fun setupMenu(){
+        (requireActivity() as MenuHost).addMenuProvider(object : MenuProvider {
+            override fun onPrepareMenu(menu: Menu) {
+                super.onPrepareMenu(menu)
+            }
+
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                menuInflater.inflate(R.menu.fragment_card_list, menu)
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {        
+                when (menuItem.itemId) {
+                    R.id.search -> {}
+                }
+                return true
+            }
+        })
+    }
+}
+Ir al contenido principal
+En Android existen varias opciones a la hora de almacenar información:
+
+almacenamiento interno de archivos privados en el dispositivo,
+
+almacenamiento externo de archivos en un sistema compartido, como es el caso de las fotos,
+
+bases de datos para almacenamiento de datos estructurados privados de la aplicación,
+
+proveedores de archivos para compartir datos estructurados entre aplicaciones,
+
+preferencias para almacenar pequeñas cantidades de datos en forma de pares clave-valor.
+
+En la siguiente sección veremos cómo gestionar una base de datos SQLite gracias a la biblioteca Room de Jetpack. Los proveedores de archivos son una especie de bases de datos que pueden compartir varias aplicaciones.
+
+En esta sección aprenderemos a utilizar las preferencias para almacenar detalles de configuración del proyecto.
+
+El almacenamiento mediante preferencias es persistente, es decir, los datos no se pierden aunque se detenga la app o se apague el dispositivo. Sin embargo, las preferencias se borran cuando se desinstala la aplicación, al igual que ocurre con las bases de datos.
+
+Las preferencias pueden ser privadas de la actividad o compartidas entre las actividades de una aplicación.
+
+Las preferencias resultan útiles, por ejemplo, para almacenar detalles de configuración de la app especificados por el usuario, siempre que se puedan identificar mediante un String y tengan un valor de los siguientes tipos: Boolean, Int, Long, Float, String o Set<String>.
+
+Ir al contenido principal
+Algunas preferencias se prestan a ser introducidas mediante una interfaz.
+
+Android facilita la lectura de estas preferencias a través de una interfaz conocida como "el menú de preferencias".
+
+Para ello, vamos a añadir a nuestro proyecto una actividad de tipo Settings Views Activity mediante el wizard de Android Studio:
+
+
+Para que la interfaz del menú no se divida entre varias pantallas, debes dejar sin marcar la casilla titulada Split setting hierarchy into separate sub-screens:
+
+
+
+La estructura de las preferencias
+Los tres ficheros generados por Android al crear la actividad son los siguientes:
+
+la clase SettingsActivity, que cuenta en su interior con una clase SettingsFragment,
+el fichero de diseño settings_activity.xml en la carpeta layout, que contiene un FrameLayout para incrustar la vista del fragmento de preferencias:
+<LinearLayout ...>
+
+    <FrameLayout
+        android:id="@+id/settings"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</LinearLayout>
+el fichero de diseño root_preferences.xml en la carpeta xml, que define la interfaz de la pantalla de preferencias:
+Este fichero debe adaptarse a las necesidades concretas de tu app. 
+posee un nodo raíz de tipo PreferenceScreen, dentro del cual se organizan las vistas por categorías (PreferenceCategory)
+Fíjate en que los elementos gráficos contienen prefijos familiares (EditText, List, ...) que acaban en Preference, dejando claro que se trata de elementos gráficos del menú de preferencias.
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="@string/messages_header">
+
+        <EditTextPreference
+            app:key="signature"
+            app:title="@string/signature_title"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:defaultValue="reply"
+            app:entries="@array/reply_entries"
+            app:entryValues="@array/reply_values"
+            app:key="reply"
+            app:title="@string/reply_title"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/sync_header">
+
+        <SwitchPreferenceCompat
+            app:key="sync"
+            app:title="@string/sync_title" />
+
+        <SwitchPreferenceCompat
+            app:dependency="sync"
+            app:key="attachment"
+            app:summaryOff="@string/attachment_summary_off"
+            app:summaryOn="@string/attachment_summary_on"
+            app:title="@string/attachment_title" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
+Dos propiedades imprescindibles de cada elemento son:
+app:key, la clave que nos permite acceder a la preferencia desde el código Kotlin,
+app:title, el título de la preferencia en la pantalla.
+Para arrancar la actividad de preferencias, puedes utilizar el objeto que implementa MenuProvider, o el menú de opciones de alguno de los fragmentos que implementes.
+
+<menu ... >
+<item
+android:id="@+id/settings"
+android:icon="@android:drawable/ic_menu_manage"
+android:title="@string/settings"
+app:showAsAction="ifRoom|withText" />
+</menu>
+Después, la actividad SettingsActivity se arranca mediante una intención al pulsar el ítem identificado como settings:
+
+class TitleActivity : AppCompatActivity() { ...
+
+    override fun onCreate(savedInstanceState: Bundle?) { ... }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.activity_title, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.settings -> {
+                startActivity(Intent(this@TitleActivity, SettingsActivity::class.java))
+            }
+        }
+        return false
+    }
+}
+Fíjate en el icono de navegación hacia atrás que se encuentra a la izquierda de la barra de tareas de SettingsActivity:
+
+Para dotarlo de funcionalidad tenemos que hacer un poco de trabajo para invocar al método callback onBackPressed.
+
+Primero, debes mostrar el icono en la barra de tareas añadiendo la siguiente instrucción al método onCreate de SettingsActivity, si no está ya presente:
+
+supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+A continuación, debes implementar los métodos onCreateOptionsMenu y onOptionsItemSelected de SettingsActivity:
+
+override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    return super.onCreateOptionsMenu(menu)
+}
+
+override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    when (item.itemId) {
+        android.R.id.home -> {
+            onBackPressedDispatcher.onBackPressed()
+            return true
+        }
+    }
+    return super.onOptionsItemSelected(item)
+}
+Puedes probar esto en Playground o en tu proyecto. En cualquiera de ellos, comprueba que el icono permite volver a la actividad desde la que se arrancó SettingsActivity.
+
+Ir al contenido principal
+Para organizar el acceso a las preferencias desde el código Kotlin, añadiremos métodos acompañantes a la clase SettingsActivity.
+
+Objeto "companion"
+Un objeto acompañante (companion object) es un objeto que pertenece a la clase en lugar de a cada instancia concreta. Esto significa que sus propiedades y métodos son accesibles directamente desde la clase, sin necesidad de crear un objeto. Es el equivalente en Kotlin a los miembros estáticos (static) de Java.
+
+Se utiliza habitualmente para dos propósitos:
+
+definir constantes asociadas a la clase, como claves de preferencias o valores por defecto,
+definir métodos de utilidad que no dependen del estado de ninguna instancia concreta, como métodos de acceso a SharedPreferences.
+Acceso a preferencias
+El acceso al valor tiene lugar mediante una llamada a getString de DefaultSharedPreferences, con dos argumentos:
+
+la clave de la preferencia, y
+el valor por defecto, para el caso en que la preferencia todavía no se haya establecido.
+class SettingsActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) { ... }
+
+    companion object {
+        const val MAX_NUMBER_SURPRISES_KEY = "max_number_surprises"
+        const val MAX_NUMBER_SURPRISES_DEFAULT = "10"
+
+        fun getMaximumNumberOfSurprises(context: Context): String? {
+            return PreferenceManager
+                .getDefaultSharedPreferences(context)
+                .getString(MAX_NUMBER_SURPRISES_KEY, MAX_NUMBER_SURPRISES_DEFAULT)
+        }
+    }
+}
+Fíjate que getMaximumNumberOfSurprises se puede llamar directamente como SettingsActivity.getMaximumNumberOfSurprises(context), sin necesidad de instanciar ningún objeto SettingsActivity.
+
+Escritura de preferencias
+No todas las preferencias deben recogerse gráficamente mediante el menú de preferencias. Debes recordar que las preferencias son una forma de almacenar pequeñas cantidades de información en forma de pares clave-valor.
+
+Por ejemplo, podemos utilizar una preferencia para recordar si el usuario de la app ya se ha autenticado y, de esta forma, evitar volverle a presentar la pantalla de login. Esta preferencia no se recoge gráficamente, sino que se asigna en el código cuando el usuario se autentica.
+
+Vamos a ver un ejemplo con un el método setLoggedIn en SettingsActivity. Su estructura te indica cómo escribir el valor de una preferencia desde el código del fragmento.
+
+Añade el método a tu actividad de preferencias y, dentro del método onCreateView de CardListFragment, utilízalo para modificar el valor de la preferencia:
+
+SettingsActivity.setLoggedIn(requireContext(), true)
+companion object {
+    const val MAX_NUMBER_SURPRISES_KEY = "max_number_surprises"
+    const val MAX_NUMBER_SURPRISES_DEFAULT = "10"
+    const val LOGGED_IN_KEY = "logged_in_key"
+
+    fun getMaximumNumberOfSurprises(context: Context): String? {...}
+
+    fun setLoggedIn(context: Context, loggedin: Boolean) {
+        val sharedPreferences = PreferenceManager
+            .getDefaultSharedPreferences(context)
+        val editor = sharedPreferences.edit()
+        editor.putBoolean(LOGGED_IN_KEY, loggedin)
+        editor.apply()
+    }
+}
+Si deseas que las preferencias cuenten con ciertos valores por defecto, lo primero que debes hacer es especificar estos valores en el fichero de preferencias mediante la propiedad android:defaultValue
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+<PreferenceCategory app:title="@string/surprise_header">
+
+    <EditTextPreference
+        app:defaultValue="20"
+        app:key="max_number_surprises"
+        app:title="@string/max_number_surprises" />
+Además, debes llamar a setDefaultValues en, por ejemplo, el método onCreate de la actividad por donde arranque la aplicación:
+
+PreferenceManager.setDefaultValues(
+    this,
+    R.xml.root_preferences,
+    false
+)
+Como ves, el primer argumento es el contexto, el segundo es el identificador del fichero de diseño del menú de preferencias, y el tercero es un Boolean que indica si los valores por defecto deben configurarse más de una vez:
+
+false: los valores se inicializan solo la primera vez que se llama al método,
+true: los valores se inicializan con cada ejecución.
+Comprueba el efecto que tiene el tercer argumento del método setDefaultValues.
+
+Ir al contenido principal
+Una vez que modificas el valor de al menos una de las preferencias, se crea un fichero de nombre com.example.playground.playground_preferences.xml en la siguiente carpeta del emulador Android:
+
+SDK/data/data/com.example.playground/shared_prefs
+Este archivo es donde se almacenan las preferencias compartidas que hemos creado en esta sección. Para visitar el archivo, se suele utilizar la herramienta adb (android debug bridge). Sobra decir que debes utilizar el nombre de tu paquete, que seguramente no coincide con el utilizado arriba: com.example.playground.
+
+Para arrancar la herramienta adb, abre una consola y sitúate en la carpeta platform_tools de tu instalación (Utiliza File -> Project Structure si no recuerdas la ubicación de la instalación del SDK). Desde allí, ejecuta la siguiente instrucción:
+
+./adb shell
+A continuación ejecuta la instrucción run-as seguida del nombre del paquete de la aplicación:
+
+run-as com.example.playground
+Esto te colocará en la carpeta data/data/com.example.playground. Ahora muévete al subdirectorio shared_prefs:
+cd shared_prefs/
+Si ahora tecleas ls comprobarás que dentro de este directorio está el archivo de preferencias que buscamos. Para ver el contenido del archivo utiliza la instrucción cat
+
+También puedes editar el fichero de preferencias mediante el Device File Explorer, que también utilizaremos con Room para echar un vistazo a la base de datos.
+
+El acceso al DFE lo encontrarás en la parte inferior derecha del marco vertical de Android Studio:
+
+
+
+Una vez tengas el explorador en pantalla, selecciona la carpeta data/data y, dentro de ella, localiza la carpeta que tenga como nombre el de tu paquete, que en nuestro caso es:
+
+com.example.playground
+Navega a la carpeta shared_prefs, donde verás el fichero XML de preferencias:
+
+Ir al contenido principal
+Qué es Room:
+Room es una biblioteca de persistencia de datos local en Android que proporciona una capa de abstracción sobre SQLite. Su objetivo es facilitar el uso de bases de datos locales en aplicaciones Android, mejorando la seguridad y la estructura del código, al tiempo que optimiza las operaciones de consulta, inserción, actualización y eliminación de datos.
+
+Te animamos a que visites la siguiente página de Jetpack. 
+
+En esta página encontrarás un listado de todas las bibliotecas, con Room entre ellas.
+
+Características:
+1. Simplifica el uso de SQLite: Aunque Room sigue utilizando SQLite debajo, su sintaxis y estructura son más amigables y fáciles de entender que trabajar directamente con SQLite.
+
+2. Relación fuerte con el ciclo de vida: Room se integra fácilmente con componentes de arquitectura de Android como ViewModel y LiveData, permitiendo que las operaciones de base de datos se realicen de forma segura sin bloquear el hilo principal de la interfaz deusuario.
+
+3. Soporte para corrutinas y Flow: Room es compatible con Kotlin Coroutines y Flow, lo que permite realizar operaciones de base de datos de forma asíncrona y reactiva, sin bloquear el hilo de la interfaz de usuario.
+
+4. Validación en tiempo de compilación: Room valida las consultas SQL en tiempo de compilación. Esto significa que si tu consulta SQL tiene un error de sintaxis o si intentas acceder a una tabla o campo que no existe, el error será detectado durante la compilación y no en tiempo de ejecución.
+
+Estructura de Room:
+1. Entidad (Entity): Una clase que define la estructura de los datos que se almacenan en la base de datos. Cada clase anotada con @Entity representa una tabla, y sus propiedades representan las columnas de la tabla.
+
+2. DAO (Data Access Object): contiene los métodos que permiten acceder a la base de datos. Los métodos pueden realizar operaciones como insert, update, delete y query (consultas) para interactuar con la base de datos. Todas las operaciones de base de datos deben realizarse a través del DAO.
+
+3. Base de datos (Database): Define la base de datos, agrupa las entidades y proporciona acceso a los DAOs. También configura las versiones de la base de datos y controla la migración en caso de cambios en el esquema.
+
+4. ViewModel (no es parte de Room, pero comúnmente usado con Room): son componentes de la arquitectura de Android que se usan para gestionar los datos de UI de manera más eficaz. Room se integra bien con los ViewModels, ya que permite realizar operaciones de base de datos asíncronas y gestionar datos observables. Gestiona la lógica de interacción entre la UI y la base de datos sin bloquear el hilo principal usando corrutinas.
+
+Para utilizar Room desde Android Studio necesitamos añadir un plugin y alguna dependencia:
+
+En esta ocasión vamos a añadir el plugin kapt (kotlin annotation processor tool) para que las clases generadas por la librería Room sean accesibles en Android Studio.
+
+Añadir las versiones en libs.versions.toml
+La forma moderna de gestionar dependencias en proyectos Android es mediante el catálogo de versiones, ubicado en gradle/libs.versions.toml. Siempre que declaremos alguna dependencia en gradle usando alias, debemos indicar la versión en libs.versions.toml. Si se utiliza id se suele indicar directamente la versión al declararlo. Para incluir room y kapt, abre ese archivo y añade las siguientes entradas en cada sección:
+
+[versions]
+...
+kotlin = "2.1.10"
+room = "2.6.1"
+
+[libraries]
+...
+androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+
+[plugins]
+...
+Fíjate en que las tres dependencias de Room apuntan a version.ref = "room", lo que garantiza que siempre usan exactamente la misma versión. Si en el futuro quieres actualizarlas, solo tendrás que cambiar el número en [versions].
+
+Plugin kapt en build.gradle
+Edita el archivo build.gradle (Module :app) y añade el plugin de kapt. Prueba primero la opción 1; si no consigues que lance, prueba la opción 2.
+
+Opción 1 — incluyendo kotlin-kapt:
+
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    id("kotlin-kapt")
+}
+Opción 2 — Definiendo variable kapt (para después usarla en dependencias)
+
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    kotlin("kapt")
+}
+Dependencias de Room en build.gradle
+Una vez definidas las entradas en libs.versions.toml, las dependencias se añaden usando alias. Fíjate en que room-compiler utiliza kapt en lugar de implementation:
+
+dependencies {
+    ...
+    implementation(libs.androidx.room.runtime)
+    kapt(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+}
+Es importante que las tres dependencias de Room apunten a la misma entrada de versión en el .toml; de lo contrario kapt puede fallar en tiempo de compilación.
+
+Utiliza el menú File → Project Structure para comprobar si Android Studio te sugiere alguna versión posterior.
+
+Para utilizar Room desde Android Studio necesitamos añadir un plugin y alguna dependencia:
+
+En esta ocasión vamos a añadir el plugin kotlin-kapt (kotlin annotation processor tool) para que las clases generadas por la librería Room sean accesibles en Android Studio.
+
+Edita el archivo build.gradle (Module :app), y añade el cuarto plugin que se muestra a continuación:
+
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    id("androidx.navigation.safeargs.kotlin")
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.kapt")
+}
+También necesitas ciertas dependencias para poder utilizar Room en el proyecto:
+
+la dependencia room-runtime nos da acceso al API de Room,
+la dependencia room-compiler nos da acceso al compilador de Room, que genera la base de datos a partir de nuestras anotaciones, como veremos pronto.
+En el mismo fichero build.gradle, añade las siguientes dos dependencias (fíjate en que la segunda utiliza kapt en lugar de implementation):
+
+dependencies {
+    ...
+    implementation("androidx.room:room-runtime:2.5.2")
+    kapt("androidx.room:room-compiler:2.5.2")
+}
+Utiliza el menú File -> Project Structure para comprobar si Android Studio te sugiere alguna versión posterior.
+
+Ir al contenido principal
+Para asociar una clase (modelo) a la base de datos, es necesario marcarla con @Entity.
+
+Por ejemplo, en Playground, deberíamos marcar Sorpresa como Entity de esta forma:
+
+
+import androidx.room.Entity ...
+
+@Entity(tableName = "surprises_table")
+open class Surprise(
+    var mainText: String,
+    var surpriseText: String,
+    var description: String,
+    var iconRes: Int,
+    var id: String = UUID.randomUUID().toString()
+) { ... }
+Con esto se crearía una tabla surprises_table, donde cada columna vendría dada por cada propiedad.
+
+Para indicar elementos como clave primaria, debemos incluir la anotación @PrimaryKey.
+
+Para cambiar el nombre de la columna podemos indicar otra anotación @Column_Info
+
+@Entity(tableName = "surprises_table")
+data class Surprise(
+    val mainText: String,
+    @ColumnInfo(name = "surprise_name")
+    val surpriseText: String,
+    val description: String,
+    val iconRes: Int,
+    @PrimaryKey
+    var id: String = UUID.randomUUID().toString(),
+    var isSurpriseVisible: Boolean = false
+) {...}
+
+Ir al contenido principal
+Un DAO (data access object) es una interfaz con las funciones necesarias para interactuar con la base de datos. Por ejemplo, vamos a necesitar métodos para insertar una nueva sorpresa o borrar una existente. 
+
+En lugar de escribir explícitamente el código de estas funciones de la interfaz, solo necesitaremos anotar las cabeceras. Room utilizará las anotaciones para generar el código con las consultas SQL adecuadas.
+
+Entre estas anotaciones encontramos las más habituales como @Insert, @Delete o @Update. Para una query SQL general se debe utilizar la anotación @Query.
+
+Para crear una nueva interfaz se deben seguir los siguientes pasos:
+
+Pulsa New -> Package sobre el nombre del paquete de tu app para añadir un subpaquete de nombre database. Por ejemplo, para Surprise: la interfaz SurpriseDao en su interior:
+
+
+
+Para usar la interfaz como Dao debemos anotarla también con @Dao.
+
+@Query
+A partir de aqui, para cualquier método que necesitemos, solo tendremos que declarar el método y anotarlo con la query:
+
+package com.example.playground.database
+
+import androidx.room.Dao
+import androidx.room.Query
+import com.example.playground.model.Surprise
+
+@Dao
+interface SurpriseDao {
+    @Query("SELECT * FROM surprises_table")
+    fun getSurprises(): List<Surprise>
+
+}
+@Insert
+@Insert
+fun addSurprise(surprise: Surprise)
+Como ves, esta anotación no necesita argumentos y hará que la función generada por Room añada la el objeto a la base de datos.
+
+Al añadir el objeto a la base de datos, se creará con una clave primaria, fíjate que hemos definido id como un randomUUID en el ejemplo.  Si quisieras que Room gestionara la clave primaria de forma completamente automática, tendrías que cambiar a un entero con autoGenerate = true:
+
+@PrimaryKey(autoGenerate = true)
+var id: Int = 0
+En ese caso Room ignora el valor que le pases (el 0) y asigna el siguiente entero disponible al insertar.
+
+El enfoque de UUID tiene una ventaja práctica: el id ya existe antes de que el objeto toque la base de datos, lo que facilita referencias cruzadas o lógica local sin necesidad de esperar al insert. El inconveniente es que tú eres responsable de que no haya colisiones, aunque con UUID v4 la probabilidad es despreciable.
+
+getSurprise DAO
+0.0 / 1.0 punto (sin calificar)
+¿Cómo sería la declaración de una función de nombre getSurprise para recuperar una sorpresa concreta por su identificador?
+En la documentación de room encontrarás ayuda para escribir este método.
+Recuerda que la consulta se suministra como argumento de la anotación @Query. En el caso de la función getSurprise, en la anotación debes utilizar la cláusula WHERE.
+  sin responder 
+Enviar
+Algunos problemas tienen opciones como guardar, restablecer, sugerencias o mostrar respuesta. Estas opciones aparecen después de oprimir el botón Enviar.
+Ir al contenido principal
+Para usar Room necesitamos una clase abstracta que extienda la clase RoomDatabase, y esté anotada con la anotación @Database. Kotlin utilizará esta clase para crear una implementación concreta de forma automática.
+
+La anotación @Database va a tener como argumentos las entidades o tablas, así como el número de la versión de la base de datos.
+
+La clase va a contar con un método acompañante que devuelve una entidad de la clase, y cuyo código será generado por Room.
+
+Por ejemplo, la clase SurpriseDatabase, corresponde a una base de datos de la app. Esta anotación necesita tres argumentos:
+
+la lista de entidades que integran la base de datos, una sola de momento: Surprise,
+la versión de la base de datos, 1, número que se ha de incrementar tras añadir tablas o columnas,
+el valor de exportSchema es true por defecto: false especifica que no deseamos mantener un histórico de las versiones de la base de datos.
+Es también en esta interfaz donde se indica el DAO, lo haremos declarando una propiedad abstracta, ya que no se puede inicializar en la declaración.
+
+package com.example.playground.database
+
+import androidx.room.Database
+import androidx.room.RoomDatabase
+import com.example.playground.model.Surprise
+
+
+@Database(entities = [Surprise::class], version = 1, exportSchema = false)
+abstract class SurpriseDatabase : RoomDatabase() {
+    abstract val surpriseDao: surpriseDao
+}
+Objeto "companion"
+Para poder crear y acceder a la base de datos sin instanciarla, vamos a crear un objeto acompañante dentro de la clase que extiende de Database.
+
+Dentro del objeto acompañante debemos añadir una propiedad y una función de acceso:
+
+una propiedad privada INSTANCE de tipo SurpriseDatabase? que se inicializa a null,
+un método getInstance que construye y devuelve la base de datos.
+Para construir la base de datos dentro de getInstance vamos a declarar una estrategia de migración. Una estrategia de migración es un objeto que indica cómo transformar las filas de un esquema antiguo en uno nuevo. La solución más simple, que seguimos aquí, es destruir la tabla y crear una nueva, lo que supone la pérdida de los datos.
+
+El método getInstance recibe un Context como parámetro, necesario para que Room pueda acceder al sistema de archivos del dispositivo donde se almacenará la base de datos. Su funcionamiento sigue el patrón singleton: primero comprueba si INSTANCE ya tiene un valor; si lo tiene, lo devuelve directamente sin crear nada nuevo. Si es null, construye la base de datos mediante Room.databaseBuilder, al que se le pasan tres argumentos:
+
+el contexto de la aplicación, context.applicationContext, para evitar fugas de memoria,
+la clase de la base de datos, SurpriseDatabase::class.java, que Room usará para generar la implementación concreta,
+el nombre del archivo de base de datos en disco, "surprises_database".
+A continuación se encadena .fallbackToDestructiveMigration(), que establece la estrategia de migración destructiva mencionada: si la versión de la base de datos cambia y no se ha definido una migración explícita, Room eliminará todas las tablas y las recreará desde cero. Finalmente, .build() materializa el objeto, que se almacena tanto en la variable local instance como en la propiedad compartida INSTANCE, garantizando que futuras llamadas reutilicen la misma instancia.
+
+fun getInstance(context: Context): SurpriseDatabase {
+    var instance = INSTANCE
+
+    if (instance == null) {
+        instance = Room.databaseBuilder(
+            context.applicationContext,
+            SurpriseDatabase::class.java,
+            "surprises_database"
+        )
+            .fallbackToDestructiveMigration()
+            .build()
+        INSTANCE = instance
+    }
+    return instance
+}
+Para inicializar la base de datos lo haremos desde la clase Application, ya que permite responder al ciclo de vida de la aplicación en conjunto.
+
+
+class PlaygroundApplication : Application() {
+    val database by lazy { SurpriseDatabase.getInstance(applicationContext) }
+    override fun onCreate() {
+        super.onCreate()
+        //Aqui podemos añadir sorpresas mediante métodos del DAO
+
+        Timber.plant(Timber.DebugTree())
+    }
+}
+Fíjate que es lazy, es decir, la propiedad database se inicializa cuando se utiliza por primera vez.
+
+Usando métodos DAO
+0.0 / 1.0 punto (sin calificar)
+Cómo añadirías una nueva sorpresa usando el método DAO addSurprise, que tenga los siguientes campos: "Primera", "SORPRESA", "la primera sorpresa". 
+  sin responder 
+Enviar
+Algunos problemas tienen opciones como guardar, restablecer, sugerencias o mostrar respuesta. Estas opciones aparecen después de oprimir el botón Enviar.
+Ir al contenido principal
+Toda aplicación de Android arranca un hilo principal de ejecución, en el que las tareas, como las pulsaciones de botones o el scroll de la vista recicladora, se ejecutan secuencialmente.
+
+Tareas como una consulta a la base de datos son tan costosas que Android no permite que sean ejecutadas en el hilo principal, para no poner en peligro la interfaz de usuario. 
+
+Cuando así se intenta, Android genera una excepción de tipo IlegalStateException.
+
+Cannot access database on the main thread since it may potentially
+lock the UI for a long period of time.
+Existen diversas maneras de ejecutar tareas en segundo plano. En esta asignatura, vamos a hacerlo mediante la clase LiveData de la biblioteca Jetpack, con la que Room está preparada para trabajar.
+
+Vamos a estudiar los cambios necesarios para poder inicializar contenidos de la base de datos desde Application de la siguiente forma:
+
+class PlaygroundApplication : Application() {
+    val applicationScope = CoroutineScope(SupervisorJob())
+    val database by lazy { SurpriseDatabase.getInstance(applicationContext) }
+
+    override fun onCreate() {
+        super.onCreate()
+        Timber.plant(Timber.DebugTree())
+
+        applicationScope.launch {
+            database.surpriseDao.addSurprise(Surprise("Momento de suerte", "🍀 ¡Trébol!", "La suerte está de tu lado", android.R.drawable.ic_menu_help))
+            database.surpriseDao.addSurprise(Surprise("¡Buenas noticias!", "🏆 ¡Ganaste!", "El esfuerzo tiene recompensa", android.R.drawable.ic_menu_today)))
+        }
+    }
+}
+Para que los métodos se ejecuten en segundo plano debemos declararlos como suspend.
+
+Una función suspend es una función que puede pausar su ejecución sin bloquear el hilo en el que corre. Esto significa que, mientras Room accede al disco para escribir o leer datos, el hilo principal queda libre para seguir dibujando la interfaz y respondiendo al usuario. Cuando la operación termina, la función reanuda su ejecución de forma transparente. Las funciones suspend solo pueden llamarse desde una corrutina o desde otra función suspend, por lo que Room se integra de forma natural con el sistema de corrutinas de Kotlin.
+
+Por ejemplo, para la función de addSurprise, quedaría algo así:
+
+@Dao
+interface SurpriseDao {
+    ...
+
+    @Insert
+    suspend fun addSurprise(surprise: Surprise)
+}
+Podemos añadir otro método DAO para resetear al iniciar la app:
+
+
+@Query("DELETE * FROM surprises_table")
+suspend fun removeSurprises()
+Deben ser suspend las operaciones de escritura puntual: @Insert, @Update y @Delete. Son operaciones que se ejecutan una vez, devuelven un resultado y terminan, por lo que encajan perfectamente con una función suspendida dentro de una corrutina. También aquellas @Query que sean de escritura, por ejemplo:
+
+@Query("DELETE * FROM surprises_table")
+suspend fun removeSurprises()
+No deben ser suspend las consultas que devuelven Flow o LiveData, como un @Query típico de lectura. Estos tipos ya son asíncronos por naturaleza: Room se encarga de emitir nuevos valores automáticamente cada vez que los datos cambian, sin necesidad de corrutinas. Añadir suspend en ese caso sería un error de compilación.
+
+Ir al contenido principal
+La forma más sencilla de depurar la base de datos es utilizar el inspector de bases de datos. Para arrancar el inspector, ejecuta tu app en un dispositivo virtual y pulsa en la barra superior: View-->Tool Windows--> App inspection
+
+Pulsa en alguna tabla en la ventana de la izquierda para desplegar sus filas:
+
+
+Puedes pulsar en el icono Open New Query Tab, para ejecutar una consulta y depurar la base de datos. Después de escribir la consulta SQL, debes pulsar el botón Run a la derecha de la pantalla:
+
+Ir al contenido principal
+Room está diseñada para integrarse con LiveData de forma muy natural. Para que las consultas ocurran en segundo plano, basta hacer que los métodos del DAO devuelvan instancias de la clase LiveData, en lugar de simples tarjetas o listas de tarjetas.
+
+Cuando terminen las consultas, el objeto LiveData enviará el resultado al hilo principal, y notificará a los observadores como veremos enseguida.
+
+Lo que debemos hacer es cambiar en DAO, para que los métodos devuelvan LiveData. En el ejemplo de Playground, esta sería la diferencia:
+
+@Query("SELECT * FROM surprises_table")
+fun getSurprises(): List<Surprise>
+@Query("SELECT * FROM surprises_table WHERE id = :id")
+fun getSurprise(id: String): Surprise?
+@Query("SELECT * FROM surprises_table")
+fun getSurprises(): LiveData<List<Surprise>>
+@Query("SELECT * FROM surprises_table WHERE id = :id")
+fun getSurprise(id: String): LiveData<Surprise?>
+ViewModel con acceso a la base de datos
+Una vez que el DAO devuelve LiveData, el siguiente paso es conectarlo con la interfaz a través de un ViewModel. El ViewModel recibe el DAO como argumento en su constructor, lo que le permite acceder a la base de datos sin depender de la capa de vista.
+
+Dentro del ViewModel encontramos dos tipos de operaciones bien diferenciadas:
+
+las lecturas se exponen como propiedades LiveData obtenidas directamente del DAO: Room se encarga de ejecutarlas en segundo plano y emitir actualizaciones automáticamente cuando los datos cambian,
+las escrituras, como inserciones o actualizaciones, se ejecutan dentro de una corrutina lanzada con viewModelScope, que garantiza la cancelación automática de la corrutina si el ViewModel se destruye.
+class ExampleViewModel(private val dao: ExampleDao): ViewModel() {
+    // Lectura: LiveData directo del DAO
+    val items = dao.getAll()
+
+    // Escritura: corrutina con viewModelScope
+    fun addItem(item: Item) = viewModelScope.launch {
+        dao.addItem(item)
+    }
+
+    fun updateItem(item: Item) = viewModelScope.launch {
+        dao.updateItem(item)
+    }
+}
+Clase factoría del ViewModel
+Como el ViewModel recibe el DAO como parámetro, no puede ser instanciado directamente por el sistema de Android, que solo sabe crear ViewModels sin argumentos. Para resolverlo se utiliza una clase factoría que implementa ViewModelProvider.Factory y se encarga de construir el ViewModel con el DAO correspondiente.
+
+class ExampleViewModelFactory(
+    private val dao: ExampleDao
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(ExampleViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return ExampleViewModel(dao) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+Observar LiveData desde el fragmento
+En el fragmento, el ViewModel se obtiene mediante la extensión viewModels, pasándole la factoría con el DAO. A partir de ahí, se registra un observador sobre la propiedad LiveData del ViewModel mediante observe, ligando la observación al ciclo de vida del fragmento con viewLifecycleOwner. Esto garantiza que el observador se elimina automáticamente cuando el fragmento se destruye, evitando fugas de memoria.
+
+Mientras la consulta se ejecuta en segundo plano, conviene inicializar la lista con un conjunto vacío para que el adaptador tenga un estado coherente desde el primer momento:
+
+private val viewModel: ExampleViewModel by viewModels {
+    val dao = (activity?.application as MyApplication).database.exampleDao
+    ExampleViewModelFactory(dao)
+}
+
+// En onCreateView:
+adapter.data = emptyList()
+
+viewModel.items.observe(viewLifecycleOwner) {
+    adapter.data = it
+    adapter.notifyDataSetChanged()
+}
+Cada vez que Room detecte un cambio en la tabla correspondiente, emitirá automáticamente la nueva lista y el observador actualizará el adaptador, manteniendo la interfaz siempre sincronizada con la base de datos.
+
+Para forzar que las consultas tengan lugar en segundo plano, podemos utilizar objetos de tipo LiveData:
+
+@Query("SELECT * FROM surprises_table")
+fun getSurprises(): LiveData<List<Surprise>>
+Una alternativa a este procedimiento consiste en la utilización de la clase Flow de la biblioteca de corrutinas de Kotlin:
+
+@Query("SELECT * FROM surprises_table")
+fun getSurprises(): Flow<List<Surprise>>
+Ir al contenido principal
+Con todos estos conceptos, incluye una base de datos a tu proyecto.
+
+Para crear la base de datos, define las interfaces DAO necesarias, no dudes en crear varias tablas si lo necesitas. Y asegúrate de combinarla con viewModel y liveData. Ya hemos visto que también puede hacerse con Flow, pero usa LiveData para la entrega
+
+Aquí tienes un resumen de los pasos:
+
+1. Añadir dependencias en build.gradle (Room, corrutinas si no las tienes ya).
+
+2. Anotar las entidades — añade @Entity a las clases de modelo que quieras persistir, @PrimaryKey al campo identificador, y @ColumnInfo donde necesites un nombre de columna personalizado.
+
+3. Crear el DAO — nueva interfaz anotada con @Dao con los métodos de lectura (@Query devolviendo LiveData o Flow) y escritura (@Insert, @Update, @Delete como suspend fun).
+
+4. Crear la clase Database — clase abstracta que extienda RoomDatabase, anotada con @Database listando las entidades y la versión. Incluye un objeto companion con un método getInstance siguiendo el patrón singleton.
+
+5. Inicializar la base de datos en Application — crea la clase Application si no existe, regístrala en el AndroidManifest.xml, y expón la base de datos como propiedad lazy.
+
+6. Actualizar los ViewModels — añade el DAO como parámetro del constructor, sustituye las fuentes de datos anteriores por propiedades LiveData del DAO, y envuelve las escrituras en viewModelScope.launch.
+
+7. Crear las factorías de ViewModel — una clase ViewModelProvider.Factory por cada ViewModel modificado, para poder pasarle el DAO al instanciarlo.
+
+8. Actualizar los fragmentos — obtén el DAO desde la Application, instancia el ViewModel mediante viewModels con su factoría, inicializa los adaptadores con emptyList() y registra observadores sobre los LiveData del ViewModel.
+
+9. Poblar la base de datos si es necesario — si antes los datos venían de una lista en memoria, añade las inserciones iniciales en el onCreate de la Application dentro de una corrutina.
+
+10. Verificar migraciones — si modificas entidades ya existentes (nuevas columnas, tablas...), incrementa la versión en @Database y define una estrategia de migración, o usa fallbackToDestructiveMigration() durante el desarrollo.
+
+Ir al contenido principal
+Firebase está construido sobre una arquitectura de microservicios. Cada componente funciona de forma independiente, con una responsabilidad bien definida dentro del ecosistema. Los desarrolladores pueden integrar solo los servicios que necesitan, de forma modular, para su aplicación, sin que unos condicionen la disponibilidad de los otros.
+
+Microservicios principales
+Firestore / Realtime DB	Bases de datos en la nube con características distintas. Firestore permite consultas avanzadas, índices compuestos y mayor escalabilidad. Realtime Database está optimizada para sincronización de baja latencia.
+Authentication	Gestiona el registro, inicio de sesión y autenticación de usuarios. Soporta email/contraseña, OAuth2 (Google, GitHub, Apple…) y autenticación anónima.
+Cloud Functions	Ejecuta lógica backend serverless bajo demanda en respuesta a eventos: cambios en Firestore, peticiones HTTP o autenticación de usuarios. No requiere gestionar infraestructura.
+Storage	Almacenamiento optimizado para archivos multimedia: imágenes, vídeo, audio y documentos de gran tamaño. Soporta cargas reanudables y entrega desde CDN.
+Hosting	Hosting para aplicaciones web estáticas y SPAs, con CDN global. Soporta rewrites, redirects y se integra con Cloud Functions para contenido dinámico.
+Ventajas de esta arquitectura
+Modularidad	Cada servicio es independiente. Los desarrolladores eligen solo lo que necesitan, reduciendo la complejidad y optimizando el uso de recursos.
+Escalabilidad	Los servicios escalan de forma independiente según la demanda, sin que un pico en uno afecte al rendimiento de los demás.
+Flexibilidad	Se integran fácilmente con otros servicios de Google Cloud o externos, facilitando la expansión del sistema según las necesidades de la aplicación.
+Aislamiento de fallos	Cada servicio opera de manera aislada. Si uno falla, los demás siguen funcionando con normalidad, manteniendo la aplicación disponible.
+En los siguientes apartados crearemos el proyecto en Firebase, registraremos la aplicación Android y configuraremos App Check y Authentication.
+
+Ir al contenido principal
+Crear Proyecto en Firebase Console
+1. Visita Firebase Console y selecciona Agregar proyecto. (Requiere cuenta de google)
+
+https://console.firebase.google.com
+
+img1
+
+2. Sigue las instrucciones para crear un proyecto. Asigna un nombre al proyecto y acepta los términos y condiciones.
+
+3. Firebase te pedirá habilitar Google Analytics. Puedes habilitarlo o saltarlo según prefieras.
+
+Registrar tu App Android en Firebase
+1. En el panel de Firebase Console, selecciona Agregar aplicación y elige Android.
+
+2. Ingresa el nombre del paquete de la aplicación (com.example.sleep).
+
+img3
+
+3. Proporciona un nombre de aplicación y un SHA‑1 (necesario para algunas integraciones, especialmente en Auth).
+
+• Obtener SHA‑1: En Android Studio, abre la Terminal y ejecuta:
+
+./gradlew signingReport
+
+• Esto generará el SHA‑1 y el SHA‑256. Copia el SHA‑1 e ingrésalo en Firebase.
+
+4. Descarga el archivo google‑services.json proporcionado por Firebase después de registrar la app. Coloca este archivo en el directorio app/ de tu proyecto en Android Studio.
+
+img4
+
+Agregar Firebase SDK al Proyecto
+1. Abre el archivo build.gradle en el nivel de proyecto (/build.gradle.kts) y añade el plugin de Google Services en dependencies:
+
+plugins {
+
+// ...
+
+// Add the dependency for the Google services Gradle plugin
+
+id("com.google.gms.google-services") version "4.4.3" apply false
+
+}
+
+2. En el archivo build.gradle del módulo (nivel de app), agrega los complementos googleservices y cualquier SDK de Firebase que quieras usar en tu app:
+
+plugins {
+
+id("com.google.gms.google-services")
+
+//resto de plugins
+
+}
+
+dependencies {
+
+// Firebase
+
+implementation(platform(libs.firebase.bom))
+
+implementation(libs.firebase.analytics)
+
+implementation(libs.firebase.auth)
+
+implementation(libs.firebase.firestore)
+
+implementation(libs.firebase.storage)
+
+implementation(libs.firebase.appcheck)
+
+implementation(libs.firebase.appcheck.playintegrity)
+
+// Resto de dependencias
+
+ }
+
+3. Actualiza el archivo libs.versions.toml
+
+4. Sincroniza el proyecto para cargar las dependencias.
+
+Ir al contenido principal
+Configuración de Firebase App Check para Seguridad
+App Check es una característica de Firebase que protege los recursos de Firebase (Firestore, Authentication, Storage, etc.) asegurando que solo las solicitudes de instancias válidas de tu aplicación puedan acceder a ellos. Esto es especialmente importante cuando se trabaja con datos sensibles de usuarios o con datos almacenados en la nube, como es el caso de esta aplicación.
+
+1. ¿Por qué necesitamos App Check? Firebase App Check ayuda a:
+
+Proteger la autenticación y base de datos: Asegura que solo las instancias de la app auténticas (no modificadas) pueden acceder a Firebase.
+Reducir abuso y proteger recursos: Filtra el tráfico no autorizado, lo que ayuda a evitar abusos o mal uso de los datos y recursos.
+2. Configuración en Firebase Console Para configurar App Check en la consola de Firebase, sigue estos pasos:
+
+1. Ve a tu proyecto en Firebase Console y selecciona la opción “App Check” en el menú de la izquierda (Compilación‑>App Check).
+
+2. Activa App Check para los servicios que quieras proteger. En este caso, es útil habilitarlo para Firestore y Firebase Authentication.
+
+3. Selecciona Play Integrity como proveedor de integridad:
+
+4. Sigue las instrucciones en Firebase Console para configurarlo correctamente.
+
+img5
+
+3. Configuración de App Check en Android Studio Para que App Check funcione en la aplicación, es necesario inicializarlo en el código. Se puede hacer en una clase personalizada que extiende Application, llamada MyApplication.
+
+1. Crear la clase MyApplication en tu proyecto Android:
+
+• En el paquete principal de tu proyecto, crea una nueva clase llamada MyApplication que extienda Application:
+
+package com.example.sleep
+
+import android.app.Application
+
+import com.google.firebase.FirebaseApp
+
+import com.google.firebase.appcheck.FirebaseAppCheck
+
+import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory
+
+class MyApplication : Application() {
+
+override fun onCreate() {
+
+super.onCreate()
+
+FirebaseApp.initializeApp(this)
+
+val appCheck = FirebaseAppCheck.getInstance()
+
+// Usa el proveedor adecuado para tu configuración (PlayIntegrity o SafetyNet)
+
+appCheck.installAppCheckProviderFactory(
+
+PlayIntegrityAppCheckProviderFactory.getInstance()
+
+)
+
+}
+
+}
+
+2. Declarar MyApplication en el AndroidManifest.xml:
+
+Abre AndroidManifest.xml y configura MyApplication como la clase application de la app. Esto asegura que la inicialización se ejecutará cuando la app se inicie.
+
+<application
+
+android:name=".MyApplication"
+
+... >
+
+...
+
+</application>
+
+Ir al contenido principal
+Configuración de Firestore y Reglas de Seguridad
+1. Activar Firestore:
+
+En Firebase Console, navega a Firestore Database y selecciona Crear base de datos.
+
+Elige Edición Standard.
+Ubicación europe‑southwest1 (Madrid)
+2. Configurar Reglas de Seguridad de Firestore:
+
+Para que solo los usuarios autenticados puedan leer y escribir sus propios datos, configura las reglas de seguridad de esta forma:
+
+// Allow read/write access on all documents to any user signed in to the application
+
+service cloud.firestore {
+
+match /databases/{database}/documents {
+
+match /{document=**} {
+
+allow read, write: if request.auth != null;
+
+}
+
+}
+
+}
+
+Cualquier usuario registrado puede leer y escribir en la base de datos
+
+Ir al contenido principal
+Firebase Authentication nos permite añadir un sistema de inicio de sesión a nuestra app sin necesidad de gestionar contraseñas ni servidores propios. Firebase se encarga de todo el proceso de forma segura.
+
+En esta unidad aprenderemos a registrar usuarios nuevos e iniciar sesión con email y contraseña, el método más habitual para empezar.
+
+1. Habilitar Authentication en Firebase Console
+Antes de tocar código, necesitamos activar el método de autenticación en la consola de Firebase:
+
+En Firebase Console, accede a tu proyecto y ve a Authentication en el menú lateral.
+Pulsa Comenzar si es la primera vez que lo abres.
+Ve a la pestaña Método de acceso.
+Haz clic en Email/Password, activa el switch y pulsa Guardar.
+2. Añadir la dependencia
+Si ya tienes el BOM de Firebase configurado de la unidad anterior, solo necesitas añadir la librería de autenticación en gradle/libs.versions.toml:
+
+[libraries]
+...
+firebase-auth = { group = "com.google.firebase", name = "firebase-auth-ktx" }
+Y en build.gradle (Module :app):
+
+dependencies {
+    ...
+    implementation(platform(libs.firebase.bom))   // si no lo tenías ya
+    implementation(libs.firebase.auth)
+}
+3. Instancia de FirebaseAuth
+Exponemos la instancia de FirebaseAuth desde la clase Application para que sea accesible desde cualquier clase:
+
+class PlaygroundApplication : Application() {
+    val auth by lazy { FirebaseAuth.getInstance() }
+    ...
+}
+4. Repositorio de autenticación
+Creamos un repositorio específico para la autenticación que encapsula las operaciones de registro e inicio de sesión. Cada método devuelve un Result de Kotlin, que puede ser Success o Failure, lo que nos permite manejar errores de forma limpia en el ViewModel:
+
+class AuthRepository(private val auth: FirebaseAuth) {
+
+    suspend fun register(email: String, password: String): Result<FirebaseUser> {
+        return try {
+            val result = auth
+                .createUserWithEmailAndPassword(email, password)
+                .await()
+            Timber.i("Usuario registrado: ${result.user?.email}")
+            Result.success(result.user!!)
+        } catch (e: Exception) {
+            Timber.e(e, "Error al registrar")
+            Result.failure(e)
+        }
+    }
+
+    suspend fun login(email: String, password: String): Result<FirebaseUser> {
+        return try {
+            val result = auth
+                .signInWithEmailAndPassword(email, password)
+                .await()
+            Timber.i("Sesión iniciada: ${result.user?.email}")
+            Result.success(result.user!!)
+        } catch (e: Exception) {
+            Timber.e(e, "Error al iniciar sesión")
+            Result.failure(e)
+        }
+    }
+
+    fun logout() {
+        auth.signOut()
+        Timber.i("Sesión cerrada")
+    }
+
+    fun currentUser(): FirebaseUser? = auth.currentUser
+}
+Fíjate en el uso de .await(): las operaciones de Firebase usan internamente callbacks, pero con la extensión await() de la librería kotlinx-coroutines-play-services podemos tratarlas como funciones suspendidas normales. Para ello añade esta dependencia:
+
+[libraries]
+...
+kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "coroutines" }
+5. ViewModel de autenticación
+El ViewModel expone el estado de la autenticación mediante LiveData con tres estados posibles: éxito con el usuario, error con el mensaje, y el usuario actual si ya había sesión iniciada:
+
+class AuthViewModel(private val repository: AuthRepository) : ViewModel() {
+
+    private val _user = MutableLiveData<FirebaseUser?>()
+    val user: LiveData<FirebaseUser?> = _user
+
+    private val _error = MutableLiveData<String>()
+    val error: LiveData<String> = _error
+
+    init {
+        // Si ya había sesión iniciada, la recuperamos
+        _user.value = repository.currentUser()
+    }
+
+    fun register(email: String, password: String) {
+        viewModelScope.launch {
+            repository.register(email, password)
+                .onSuccess { _user.postValue(it) }
+                .onFailure { _error.postValue(it.message) }
+        }
+    }
+
+    fun login(email: String, password: String) {
+        viewModelScope.launch {
+            repository.login(email, password)
+                .onSuccess { _user.postValue(it) }
+                .onFailure { _error.postValue(it.message) }
+        }
+    }
+
+    fun logout() {
+        repository.logout()
+        _user.value = null
+    }
+}
+6. Observar el estado en el fragmento
+En el fragmento observamos user y error del ViewModel para actualizar la interfaz. Si user tiene valor, el usuario está autenticado; si es null, no hay sesión activa:
+
+viewModel.user.observe(viewLifecycleOwner) { user ->
+    if (user != null) {
+        Timber.i("Sesión activa: ${user.email}")
+        // Navegar a la pantalla principal
+    } else {
+        Timber.i("Sin sesión")
+        // Mostrar pantalla de login
+    }
+}
+
+viewModel.error.observe(viewLifecycleOwner) { mensaje ->
+    // Mostrar el error al usuario, por ejemplo con un Toast o Snackbar
+    Toast.makeText(requireContext(), mensaje, Toast.LENGTH_SHORT).show()
+}
+
+// Botón de registro
+binding.registerButton.setOnClickListener {
+    val email    = binding.emailEditText.text.toString()
+    val password = binding.passwordEditText.text.toString()
+    viewModel.register(email, password)
+}
+
+// Botón de login
+binding.loginButton.setOnClickListener {
+    val email    = binding.emailEditText.text.toString()
+    val password = binding.passwordEditText.text.toString()
+    viewModel.login(email, password)
+}
+
+// Botón de logout
+binding.logoutButton.setOnClickListener {
+    viewModel.logout()
+}
+Fíjate en que el bloque init del ViewModel comprueba si ya existe una sesión activa al arrancar. Firebase mantiene la sesión entre ejecuciones de la app de forma automática, por lo que el usuario no tendrá que volver a identificarse cada vez que abra la aplicación.
+
+Ir al contenido principal
+Otra funcionalidad que ofrece Firebase, es sincronizar nuestra base de datos con ROOM, de forma que los datos se sincronicen automáticamente en la nube. Esto nos permite hacer un backup de los datos y compartirlos entre dispositivos.
+
+Usaremos Cloud Firestore, la base de datos NoSQL de Firebase. La buena noticia es que no necesitamos modificar nada de lo que ya tenemos: ni la entidad, ni el DAO, ni la clase Database. Solo añadiremos una capa repositorio entre el ViewModel y el DAO.
+
+Arquitectura resultante
+La arquitectura que seguiremos introduce el repositorio como intermediario entre el ViewModel y las dos fuentes de datos:
+
+// Sin Firebase (lo que ya tenemos)
+Fragment → ViewModel → DAO → Room
+
+// Con Firebase (lo que vamos a construir)
+Fragment → ViewModel → Repositorio → DAO → Room → Firestore
+Lo que no cambia: la entidad @Entity, el DAO, la clase SurpriseDatabase, y la lógica del fragmento.
+
+Lo que sí cambia: el ViewModel pasa a usar el repositorio en lugar del DAO directamente, y la factoría recibe un repositorio en lugar de un DAO.
+
+1. Crear el proyecto en Firebase
+Antes de tocar código, necesitamos dar de alta nuestra app en la consola de Firebase:
+
+Accede a console.firebase.google.com e inicia sesión con tu cuenta de Google.
+Pulsa Añadir proyecto, asígnale un nombre y sigue los pasos del asistente. Puedes desactivar Google Analytics si no lo necesitas.
+Una vez creado el proyecto, pulsa el icono de Android para registrar tu app. Introduce el nombre del paquete exacto de tu proyecto (lo encontrarás en la primera línea de cualquier fichero Kotlin, por ejemplo com.example.myapp).
+Descarga el fichero google-services.json que genera Firebase y colócalo en la carpeta app/ de tu proyecto Android.
+En la consola de Firebase, ve a Firestore Database en el menú lateral, pulsa Crear base de datos y selecciona el modo Prueba durante el desarrollo.
+2. Añadir las dependencias
+Añade las versiones en gradle/libs.versions.toml:
+
+[versions]
+...
+google-services    = "4.4.2"
+firebase-bom       = "33.1.0"
+
+[libraries]
+...
+firebase-bom       = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
+firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
+
+[plugins]
+...
+google-services    = { id = "com.google.gms.google-services", version.ref = "google-services" }
+Fíjate en que firebase-firestore no tiene version.ref: al usar el BOM (Bill of Materials), Firebase gestiona automáticamente las versiones de todas sus librerías de forma coherente.
+
+Edita build.gradle (Project) y añade el plugin de Google Services:
+
+plugins {
+    ...
+    alias(libs.plugins.google.services) apply false
+}
+Edita build.gradle (Module :app):
+
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.androidx.navigation.safeargs)
+    alias(libs.plugins.google.services)    // añade este
+    id("kotlin-kapt")
+}
+
+dependencies {
+    ...
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.firestore)
+}
+3. Añadir toMap() a la entidad
+Firestore necesita recibir los datos como un Map. Añadimos una función de extensión a la clase Surprise sin modificar la clase en sí, ya que es una función de extensión que vive en un fichero aparte:
+
+fun Surprise.toMap(): Map<String, Any?> = mapOf(
+    "id"                to id,
+    "mainText"          to mainText,
+    "surpriseText"      to surpriseText,
+    "description"       to description,
+    "isSurpriseVisible" to isSurpriseVisible
+)
+
+fun DocumentSnapshot.toSurprise(): Surprise? {
+    return try {
+        Surprise(
+            id                = getString("id") ?: return null,
+            mainText          = getString("mainText") ?: "",
+            surpriseText      = getString("surpriseText") ?: "",
+            description       = getString("description") ?: "",
+            isSurpriseVisible = getBoolean("isSurpriseVisible") ?: false
+        )
+    } catch (e: Exception) { null }
+}
+4. Crear la clase repositorio
+El repositorio recibe el DAO existente y añade Firestore por dentro. El ViewModel no sabe que existe Firestore: solo habla con el repositorio. Las operaciones de lectura siguen siendo el LiveData del DAO, que Room ya gestiona en segundo plano:
+
+class SurpriseRepository(private val dao: SurpriseDao) {
+
+    private val collection = FirebaseFirestore.getInstance().collection("surprises")
+
+    // Lectura: el mismo LiveData del DAO, sin cambios
+    val surprises = dao.getSurprises()
+
+    // Escritura: guarda en Room y sube a Firestore
+    suspend fun addSurprise(surprise: Surprise) {
+        dao.addSurprise(surprise)
+        collection.document(surprise.id).set(surprise.toMap())
+    }
+
+    suspend fun deleteSurprise(surprise: Surprise) {
+        dao.deleteSurprise(surprise)
+        collection.document(surprise.id).delete()
+    }
+
+    // Sincronización: vuelca Firestore en Room al arrancar
+    fun syncFromFirestore(scope: CoroutineScope) {
+        collection.addSnapshotListener { snapshot, error ->
+            if (error != null || snapshot == null) return@addSnapshotListener
+            scope.launch {
+                snapshot.documents
+                    .mapNotNull { it.toSurprise() }
+                    .forEach { dao.addSurprise(it) }
+            }
+        }
+    }
+}
+5. Actualizar el ViewModel y su factoría
+El ViewModel recibe ahora un repositorio en lugar del DAO. El resto de su lógica es idéntica a la que ya teníamos: la propiedad surprises sigue siendo un LiveData, y las escrituras siguen usando viewModelScope. La sincronización con Firestore se arranca en el bloque init:
+
+class SurpriseViewModel(private val repository: SurpriseRepository) : ViewModel() {
+
+    val surprises = repository.surprises   // mismo LiveData de antes
+
+    init {
+        repository.syncFromFirestore(viewModelScope)
+    }
+
+    fun addSurprise(surprise: Surprise) = viewModelScope.launch {
+        repository.addSurprise(surprise)
+    }
+
+    fun deleteSurprise(surprise: Surprise) = viewModelScope.launch {
+        repository.deleteSurprise(surprise)
+    }
+}
+
+class SurpriseViewModelFactory(
+    private val repository: SurpriseRepository
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(SurpriseViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return SurpriseViewModel(repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+Fíjate en que la estructura de la factoría es exactamente igual a la que ya teníamos: solo cambia el tipo del parámetro, de SurpriseDao a SurpriseRepository.
+
+6. Actualizar Application y el fragmento
+En PlaygroundApplication exponemos el repositorio como propiedad lazy, construido con el DAO que ya teníamos:
+
+class PlaygroundApplication : Application() {
+    val database   by lazy { SurpriseDatabase.getInstance(applicationContext) }
+    val repository by lazy { SurpriseRepository(database.surpriseDao) }
+
+    override fun onCreate() {
+        super.onCreate()
+        Timber.plant(Timber.DebugTree())
+    }
+}
+En el fragmento, el único cambio es que la factoría recibe el repositorio en lugar del DAO. El observador del LiveData no cambia en absoluto:
+
+private val viewModel: SurpriseViewModel by viewModels {
+    val repository = (activity?.application as PlaygroundApplication).repository
+    SurpriseViewModelFactory(repository)
+}
+
+// El observador es exactamente igual que antes
+viewModel.surprises.observe(viewLifecycleOwner) {
+    adapter.data = it
+    adapter.notifyDataSetChanged()
+}
+Ir al contenido principal
+En el desarrollo de aplicaciones móviles modernas, la capacidad de conectar una app con servicios web es fundamental. Desde obtener publicaciones de una red social hasta enviar información a un servidor, las llamadas HTTP permiten que nuestras apps interactúen con el mundo exterior.
+
+En esta unidad aprenderemos a realizar peticiones GET y POST en Android de forma eficiente, segura y mantenible. Para ello, utilizaremos Retrofit, la librería más popular para el consumo de APIs REST en Android, que se integra perfectamente con Kotlin, Coroutines y otras herramientas modernas del ecosistema Android.
+
+Referencias: Sitio oficial de Retrofit (por Square)
+
+1. Dependencias y permisos
+Añade las siguientes entradas en gradle/libs.versions.toml:
+
+[versions]
+...
+retrofit = "2.9.0"
+
+[libraries]
+...
+retrofit               = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+Y en build.gradle (Module :app):
+
+dependencies {
+    ...
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+}
+Además, como la app va a comunicarse con Internet, necesitas declarar el permiso en AndroidManifest.xml:
+
+<uses-permission android:name="android.permission.INTERNET" />
+2. Crear la instancia de Retrofit
+Para usar Retrofit necesitamos instanciarlo indicando el servidor al que nos vamos a conectar. Como esta instancia debe ser accesible desde varias clases, el lugar más adecuado es la clase Application, que ya conocemos de unidades anteriores:
+
+class PlaygroundApplication : Application() {
+
+    val retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl("https://jsonplaceholder.typicode.com/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        Timber.plant(Timber.DebugTree())
+    }
+}
+Veamos qué hace cada parte del builder:
+
+.baseUrl(...) — es la URL base del servidor al que tu app se va a conectar. Aquí se define el dominio general, sin las rutas finales. Debe terminar en / o Retrofit lanzará un error. En este caso usamos JSONPlaceholder, un servidor gratuito de pruebas que simula una API real. Puedes mantener este servidor en la entrega final si no tienes uno propio.
+.addConverterFactory(GsonConverterFactory.create()) — le dice a Retrofit que convierta automáticamente el JSON recibido en objetos Kotlin usando Gson. Sin esto, tendrías que parsear manualmente las respuestas.
+.build() — construye la instancia con la configuración definida.
+Ir al contenido principal
+3. Modelo de datos
+Antes de definir las llamadas necesitamos una clase que represente los datos que vamos a enviar y recibir. Gson se encargará de convertir automáticamente entre esta clase y el JSON:
+
+data class Comment(
+    val postId: Int,
+    val id: Int? = null,  // el servidor lo genera, por eso es opcional
+    val name: String,
+    val email: String,
+    val body: String
+)
+Fíjate en que id es nullable y tiene valor por defecto null: al enviar un comentario nuevo no conocemos el id, es el servidor quien lo asigna.
+
+4. Interfaz de la API
+Con Retrofit definimos en una interfaz qué endpoints tiene nuestra API. Retrofit se encarga automáticamente de generar la implementación real de esa interfaz en tiempo de ejecución. Fíjate en que los métodos son suspend, para que puedan ejecutarse en segundo plano sin bloquear el hilo principal:
+
+interface ApiService {
+
+    @POST("comments")
+    suspend fun postComment(@Body comment: Comment): Response<Comment>
+
+    @GET("comments/{id}")
+    suspend fun getComment(@Path("id") id: Int): Response<Comment>
+}
+@POST("comments") — indica que esta función hace una petición POST a la ruta comments, que se añade a la baseUrl.
+@Body — serializa el objeto Comment como cuerpo JSON de la petición.
+@GET("comments/{id}") — hace una petición GET con un parámetro variable en la ruta.
+@Path("id") — sustituye {id} en la ruta por el valor del parámetro id.
+Response<Comment> — el tipo de retorno de Retrofit que nos da acceso tanto al cuerpo de la respuesta como al código de estado HTTP.
+5. Clase repositorio
+Al igual que hacemos con Room, encapsulamos el acceso a la API en un repositorio. Esto mantiene el ViewModel limpio y facilita cambiar la fuente de datos en el futuro:
+
+class CommentRepository(private val api: ApiService) {
+
+    suspend fun sendComment(comment: Comment): Response<Comment> {
+        Timber.i("sendComment ${comment.body}")
+        return api.postComment(comment)
+    }
+
+    suspend fun getComment(id: Int): Response<Comment> {
+        Timber.i("getComment $id")
+        val response = api.getComment(id)
+        Timber.i("successful? ${response.isSuccessful}")
+        if (response.isSuccessful) {
+            Timber.i("success ${response.body()}")
+        } else {
+            Timber.i("Error: ${response.code()}")
+        }
+        return response
+    }
+}
+6. ViewModel
+El ViewModel orquesta las llamadas al repositorio dentro de corrutinas lanzadas con viewModelScope, y expone el resultado mediante LiveData para que el fragmento pueda observarlo:
+
+class CommentViewModel(private val repository: CommentRepository) : ViewModel() {
+
+    private val _comment = MutableLiveData<Comment>()
+    val comment: LiveData<Comment> = _comment
+
+    private val _error = MutableLiveData<String>()
+    val error: LiveData<String> = _error
+
+    fun sendComment() {
+        viewModelScope.launch {
+            try {
+                val commentToSend = Comment(
+                    postId = 1,
+                    name   = "AndroidUser",
+                    email  = "android@test.com",
+                    body   = "¡Hola desde la app!"
+                )
+                Timber.i("Trying post")
+                val posted = repository.sendComment(commentToSend)
+                if (posted.isSuccessful) {
+                    val comment = posted.body()
+                    if (comment != null) {
+                        _comment.postValue(comment)
+                        Timber.i("Successfully posted")
+                    } else {
+                        _error.postValue("Comentario no recibido")
+                        Timber.w("Posted body is null")
+                    }
+                } else {
+                    _error.postValue("Error en POST: ${posted.code()}")
+                    Timber.w("POST fallido con código: ${posted.code()}")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error en sendComment")
+                _error.postValue("Error: ${e.message}")
+            }
+        }
+    }
+
+    fun fetchComment(id: Int) {
+        viewModelScope.launch {
+            try {
+                val fetched = repository.getComment(id)
+                if (fetched.isSuccessful) {
+                    val comment = fetched.body()
+                    if (comment != null) {
+                        _comment.postValue(comment)
+                        Timber.i("Fetched comment: $comment")
+                    } else {
+                        _error.postValue("Comentario no encontrado")
+                        Timber.w("Fetched body is null")
+                    }
+                } else {
+                    _error.postValue("Error en GET: ${fetched.code()}")
+                    Timber.w("GET fallido con código: ${fetched.code()}")
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error en fetchComment")
+                _error.postValue("Excepción en GET: ${e.message}")
+            }
+        }
+    }
+}
+Fíjate en el patrón _comment / comment: la propiedad mutable es privada y solo el ViewModel puede modificarla, mientras que el fragmento solo accede a la versión de solo lectura.
+
+
+
+
+Blank Problem
+0 puntos posibles (sin calificar)
+Mostrar respuesta
+Enviar
+Algunos problemas tienen opciones como guardar, restablecer, sugerencias o mostrar respuesta. Estas opciones aparecen después de oprimir el botón Enviar.
+Como ejercicio final te proponemos que integres esto en tu proyecto, puedes hacerlo en Playground como ejemplo o en tu proyecto con la API que prefieras. Completa el código de la interfaz y el ViewModel para conseguir:
+
+Crear una función que envíe (POST) un comentario a https://jsonplaceholder.typicode.com/comments.
+Luego hacer una petición GET para buscar un comentario por id.
+interface ApiService {
+
+    @POST("comments")
+    // Completa aquí tu código
+
+    @GET("comments/{id}")
+    // Completa aquí tu código
+}
+
+fun sendComment() {
+    viewModelScope.launch {
+        val posted = // Tu código aquí
+        ...
+    }
+}
+
+fun fetchComment(id: Int) {
+    viewModelScope.launch {
+        val fetched = // Tu código aquí
+        ...
+    }
+}
+Nota: JSONPlaceholder no guarda realmente los datos, pero responde como si lo hiciera (es un servidor de pruebas). Por eso al hacer el GET tras el POST necesitaremos usar un id genérico como 1 en lugar del id del comentario recién enviado.
+
+Ir al contenido principal
+Periféricos en Android
+Micrófono, cámara y Bluetooth
+
+Los dispositivos Android ofrecen acceso a un conjunto de periféricos que permiten a las aplicaciones interactuar con el mundo físico: el micrófono para registrar audio, la cámara para capturar imágenes o vídeo, y el Bluetooth para comunicarse con dispositivos externos. En esta unidad veremos cómo integrar cada uno de ellos.
+
+
+1. Micrófono — Registro de audio
+Para registrar audio en Android se usa la clase MediaRecorder, que gestiona todo el proceso de grabación: fuente de audio, formato del archivo, codificación y ciclo de vida de la grabación.
+
+Configuración de MediaRecorder
+Los parámetros principales que hay que establecer antes de iniciar una grabación son:
+
+setAudioSource	Define la fuente de audio. Usaremos MIC para el micrófono del dispositivo.
+setOutputFormat	Formato del archivo resultante. THREE_GPP (.3gp) es comprimido y ligero, adecuado para grabaciones largas.
+setAudioEncoder	Códec de audio. AMR_NB (Adaptive Multi-Rate Narrowband) es eficiente para grabaciones de voz.
+setOutputFile	Ruta del archivo de salida donde se guardará la grabación.
+Ciclo de vida de la grabación
+Configurar los parámetros con los métodos anteriores.
+Llamar a prepare() para inicializar el grabador.
+Llamar a start() para comenzar la grabación.
+Llamar a stop() para finalizar y guardar el archivo.
+Llamar a release() para liberar los recursos del sistema.
+mediaRecorder = MediaRecorder().apply {
+    setAudioSource(MediaRecorder.AudioSource.MIC)
+    setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
+    setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+    setOutputFile(outputFile.absolutePath)
+    prepare()
+    start()
+}
+Permisos necesarios
+A partir de Android 6.0 (API 23), los permisos sensibles deben solicitarse en dos pasos:
+
+1. Declarar el permiso en AndroidManifest.xml:
+
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
+2. Solicitar el permiso en tiempo de ejecución:
+
+val requestPermissionLauncher =
+    registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -&gt;
+        if (!isGranted) {
+            Toast.makeText(this, "Permiso para grabar audio denegado",
+                Toast.LENGTH_SHORT).show()
+        }
+    }
+
+requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+El permiso debe solicitarse antes de iniciar cualquier grabación. Si el usuario lo deniega, la app debe informarle y no intentar acceder al micrófono.
+
+Ir al contenido principal
+2. Cámara — Captura de imágenes y vídeo
+Android ofrece dos formas de acceder a la cámara: delegando la captura a la app de cámara del sistema mediante un Intent, o usando la API CameraX para un control más completo del proceso. La primera opción es más sencilla; la segunda permite previsualizar la cámara directamente en la app, aplicar análisis de imagen en tiempo real o controlar parámetros como el zoom o la exposición.
+
+Opción A — Captura mediante Intent
+Lanza la app de cámara del sistema y recibe la imagen capturada sin necesidad de gestionar la cámara directamente:
+
+val takePictureLauncher =
+    registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap -&gt;
+        if (bitmap != null) {
+            imageView.setImageBitmap(bitmap)
+        }
+    }
+
+takePictureLauncher.launch(null)
+Este método devuelve una miniatura. Para guardar la imagen a tamaño completo hay que usar ActivityResultContracts.TakePicture() y proporcionar una URI de destino.
+Opción B — CameraX
+CameraX es la librería oficial de Jetpack para acceder a la cámara. Simplifica el uso de la API de cámara y garantiza compatibilidad entre dispositivos. Sus tres casos de uso principales son:
+
+Preview	Muestra el stream de la cámara en tiempo real en un PreviewView dentro del layout.
+ImageCapture	Captura una fotografía y la guarda en disco o la devuelve como Bitmap.
+ImageAnalysis	Procesa cada fotograma en tiempo real, útil para detección de objetos, códigos QR o análisis de imagen.
+Añadir la dependencia en build.gradle:
+
+implementation "androidx.camera:camera-camera2:1.3.0"
+implementation "androidx.camera:camera-lifecycle:1.3.0"
+implementation "androidx.camera:camera-view:1.3.0"
+Configurar Preview e ImageCapture:
+
+val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+
+cameraProviderFuture.addListener({
+    val cameraProvider = cameraProviderFuture.get()
+
+    val preview = Preview.Builder().build().also {
+        it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
+    }
+
+    val imageCapture = ImageCapture.Builder().build()
+
+    val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+    cameraProvider.unbindAll()
+    cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture)
+
+}, ContextCompat.getMainExecutor(this))
+Capturar una foto con ImageCapture:
+
+val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+
+imageCapture.takePicture(
+    outputOptions,
+    ContextCompat.getMainExecutor(this),
+    object : ImageCapture.OnImageSavedCallback {
+        override fun onImageSaved(output: ImageCapture.OutputFileResults) {
+            Toast.makeText(this@MainActivity, "Foto guardada", Toast.LENGTH_SHORT).show()
+        }
+        override fun onError(exc: ImageCaptureException) {
+            Log.e("CameraX", "Error al capturar: ${exc.message}", exc)
+        }
+    }
+)
+Permisos necesarios
+<uses-permission android:name="android.permission.CAMERA" />
+val cameraPermissionLauncher =
+    registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted -&gt;
+        if (isGranted) {
+            startCamera()
+        } else {
+            Toast.makeText(this, "Permiso de cámara denegado",
+                Toast.LENGTH_SHORT).show()
+        }
+    }
+
+cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+Ir al contenido principal
+3. Bluetooth — Conexión con dispositivos externos
+El Bluetooth permite a una app Android comunicarse con dispositivos externos. Android distingue entre Bluetooth clásico, orientado a transferencia de datos continua, y Bluetooth Low Energy (BLE), diseñado para dispositivos de bajo consumo que envían datos de forma periódica.
+
+Bluetooth clásico vs. BLE
+Bluetooth clásico	Transferencia continua de datos a mayor velocidad. Usado en auriculares, altavoces y periféricos que transmiten streams.
+Bluetooth Low Energy	Para dispositivos de bajo consumo que envían datos periódicos. Es el estándar en sensores y wearables modernos.
+Componentes principales de la API Bluetooth
+BluetoothAdapter	Punto de entrada a todo el sistema Bluetooth del dispositivo. Solo existe uno por dispositivo y se obtiene a través del BluetoothManager. Permite comprobar si el Bluetooth está activado y obtener el escáner.
+BluetoothLeScanner	Se obtiene del BluetoothAdapter. Se encarga de buscar dispositivos BLE cercanos. Cuando encuentra uno, lo devuelve a través de un ScanCallback.
+BluetoothDevice	Representa un dispositivo Bluetooth encontrado en el escaneo. Desde este objeto se inicia la conexión llamando a connectGatt().
+BluetoothGatt	Gestiona la conexión BLE una vez establecida. Permite descubrir los servicios del dispositivo y leer o escribir sus características.
+BluetoothGattCallback	Clase abstracta que implementa la app para recibir eventos: cambios de estado de la conexión, servicios descubiertos y datos recibidos.
+Obtener el BluetoothAdapter:
+
+val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+val bluetoothAdapter = bluetoothManager.adapter
+
+if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
+    // El dispositivo no soporta Bluetooth o está desactivado
+}
+Pasos para conectarse a un dispositivo BLE
+Obtener el BluetoothAdapter del sistema.
+Escanear dispositivos cercanos con BluetoothLeScanner.
+Conectarse al dispositivo con connectGatt().
+Implementar un BluetoothGattCallback para recibir datos y gestionar el estado de la conexión.
+Leer o suscribirse a las características (characteristics) del dispositivo.
+val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+val bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
+
+val scanCallback = object : ScanCallback() {
+    override fun onScanResult(callbackType: Int, result: ScanResult) {
+        val device = result.device
+        device.connectGatt(context, false, gattCallback)
+    }
+}
+
+bluetoothLeScanner.startScan(scanCallback)
+Permisos necesarios
+<!-- Android 11 e inferior -->
+<uses-permission android:name="android.permission.BLUETOOTH" />
+<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+<!-- Android 12 (API 31) y superior -->
+<uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+<uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+En Android 12 y superior, el permiso de localización ya no es necesario para escanear BLE si se añade el atributo android:usesPermissionFlags="neverForLocation" en el permiso BLUETOOTH_SCAN.
+Ir al contenido principal
+Translations Editor
+El editor de traducciones proporciona una visión unificada de todos los recursos de tipo string.
+
+Para arrancarlo debes pulsar el botón derecho del ratón sobre el fichero strings.xml y seleccionar Open Translations Editor al final del menú desplegable.
+
+Como ves a continuación, el editor muestra la versión por defecto y alternativas (Spanish en nuestro caso) de cada recurso, cuyos nombres se muestran en la columna de la izquierda (Key):
+
+
+
+Puedes añadir nuevos recursos pulsando el icono del signo + en la esquina superior izquierda:
+
+También puede resultarte útil marcar algunos recursos como no traducibles. Para ello debes seleccionar la casilla correspondiente de la columna Untranslatable.
+Visita la documentación si deseas conocer más detalles sobre esta herramienta.
+Ir al contenido principal
+El dark mode no se gestiona con un tema alternativo. Android aplica automáticamente el tema de values-night/ cuando el sistema está en modo oscuro, sin que tengamos que hacer nada en el código.
+
+La estructura de carpetas es:
+
+res/
+├── values/
+│   ├── themes.xml       ← tema claro (por defecto)
+│   └── colors.xml
+└── values-night/
+    ├── themes.xml       ← tema oscuro
+    └── colors.xml
+En values/themes.xml definimos los colores para el modo claro:
+
+<!-- values/themes.xml -->
+<resources>
+    <style name="Theme.MyApp" parent="Theme.MaterialComponents.DayNight">
+        <item name="colorPrimary">@color/purple_500</item>
+        <item name="android:windowBackground">@color/white</item>
+    </style>
+</resources>
+
+<!-- values-night/themes.xml -->
+<resources>
+    <style name="Theme.MyApp" parent="Theme.MaterialComponents.DayNight">
+        <item name="colorPrimary">@color/purple_200</item>
+        <item name="android:windowBackground">@color/black</item>
+    </style>
+</resources>
+Fíjate en el parent Theme.MaterialComponents.DayNight: este tema base ya incluye soporte para dark mode, adaptando automáticamente muchos colores del sistema. Si usas atributos semánticos como ?attr/colorSurface o ?attr/colorOnPrimary en tus layouts en lugar de colores fijos, el tema se encargará de cambiarlos sin que tengas que definir nada en values-night/.
+
+Para forzar el modo oscuro desde código, por ejemplo desde un botón de ajustes, puedes usar:
+
+// Activar dark mode
+AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+
+// Volver a light mode
+AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+
+// Seguir la configuración del sistema (recomendado)
+AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+La llamada a setDefaultNightMode recrea la actividad automáticamente para aplicar el nuevo tema, por lo que no necesitas hacer nada más.
+
+
+Ir al contenido principal
+Para asegurarnos de que la vista se vea bien en diferentes dispositivos o formatos, podemos añadir layouts alternativos. Es el mismo mecanismo que ya usamos con strings.xml: Android elige automáticamente el recurso más adecuado según las características del dispositivo en el momento de ejecutar la app.
+
+La clave está en la organización de carpetas dentro de res/. Cada carpeta puede llevar un calificador que indica en qué condiciones se usa ese recurso:
+
+res/
+├── layout/                  ← layout por defecto (móvil vertical)
+│   └── fragment_main.xml
+├── layout-land/             ← landscape (horizontal)
+│   └── fragment_main.xml
+├── layout-sw600dp/          ← tablets pequeñas (≥ 600dp de ancho)
+│   └── fragment_main.xml
+├── layout-sw720dp/          ← tablets grandes (≥ 720dp de ancho)
+│   └── fragment_main.xml
+└── values-night/            ← dark mode
+    └── themes.xml
+El archivo debe llamarse exactamente igual en todas las carpetas. Android selecciona el más específico que encaje con el dispositivo, y si no encuentra ninguno, usa el de layout/ por defecto.
+
+Landscape vs Portrait
+El calificador -land indica que ese layout se usará cuando el dispositivo esté en orientación horizontal. Es útil para reorganizar los elementos aprovechando el espacio extra en anchura, por ejemplo colocando dos paneles lado a lado en lugar de uno encima del otro.
+
+Para crearlo en Android Studio, haz clic derecho sobre la carpeta layout/ y selecciona New → Layout Resource File. En el campo Available qualifiers selecciona Orientation y elige Landscape. Android Studio creará automáticamente la carpeta layout-land/.
+
+El layout por defecto (layout/fragment_main.xml) podría ser:
+
+<!-- layout/fragment_main.xml — portrait -->
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/image"
+        android:layout_width="match_parent"
+        android:layout_height="200dp" />
+
+    <TextView
+        android:id="@+id/description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>
+Y el alternativo para landscape (layout-land/fragment_main.xml) reorganiza los elementos en horizontal:
+
+<!-- layout-land/fragment_main.xml — landscape -->
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/image"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1" />
+
+    <TextView
+        android:id="@+id/description"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1" />
+
+</LinearLayout>
+Fíjate en que los IDs de las vistas (image, description) son los mismos en ambos layouts. Esto es importante: el fragmento usa Data Binding o findViewById con esos IDs, y funcionará igual independientemente de qué layout haya cargado Android.
+
+Tablets (sw600dp y sw720dp)
+El calificador sw significa smallest width (anchura mínima). sw600dp se aplica cuando el lado más corto de la pantalla tiene al menos 600dp, que corresponde aproximadamente a una tablet de 7 pulgadas. sw720dp corresponde a tablets de 10 pulgadas o más.
+
+Este calificador es independiente de la orientación: una tablet en landscape sigue teniendo sw600dp porque su lado más corto no cambia al girar.
+
+Un uso habitual en tablets es mostrar un layout de dos paneles (maestro-detalle) que en móvil serían dos pantallas separadas:
+
+<!-- layout-sw600dp/fragment_main.xml — tablet -->
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
+
+    <!-- Panel izquierdo: lista -->
+    <FrameLayout
+        android:id="@+id/listContainer"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1" />
+
+    <!-- Panel derecho: detalle -->
+    <FrameLayout
+        android:id="@+id/detailContainer"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="2" />
+
+</LinearLayout>
+Desde el fragmento puedes detectar si estás en el layout de tablet comprobando si el contenedor del detalle existe:
+
+val isTwoPane = view.findViewById<View>(R.id.detailContainer) != null
+
+if (isTwoPane) {
+    // Cargar el fragmento de detalle en el panel derecho
+} else {
+    // Navegar a la pantalla de detalle normalmente
+}
+
+Ir al contenido principal
+Esta última entrega el proyecto deberá estar completo, incluyendo las últimas secciones trabajadas:
+
+RecyclerView: Implementa las listas de elementos que tengas usando RecyclerView para que su gestión sea eficiente.
+MaterialDesign: Usa elementos de Material design para añadir cualquier elemento que quieras destacar.
+Menús y preferencias: Incluye barra de navegación o drawer, menú en algún fragmento o actividad y preferencias
+ROOM: Implementa la base de datos con Room
+Firebase: Con implementar un servicio de Firebase es suficiente
+EXTRAS: Añade alguna funcionalidad extra, puede ser de las que se listan en UAMx o cualquiera que acuerdes con la profesora. 
+La aplicación desarrollada se presentará en clase los días 8 y 13 de mayo.
+
+Se evaluará siguiendo la rúbrica: Rubrica_2025-2026_E3.pdf
+
+1. Diseño de la app 2,20
+Correcta justificación de las decisiones del tipo de vista seleccionado y posicionamiento de los
+elementos 0,20
+Correcto funcionamiento de los elementos implementados 0,20
+Recycler view 1,00
+Uso de elementos del paradigma material design 0,80
+2. Intenciones y Navegación entre fragmentos 1,00
+Justificación del uso de Fragmentos o Actividades 0,50
+Justificación de la posición y motivo en la que se ha incluido la intención o navegación 0,50
+3. Ciclo de vida 0,50
+Capacidad de describir el ciclo de vida de cada actividad 0,50
+4. ViewModel y LiveData 1,00
+Implementación correcta de modelos y relación con viewModel 0,50
+Capacidad para incluir modificaciones similares aplicando el modelo ViewModel y compresión de las
+partes del paradigma 0,50
+5. Menús y preferencias 0,80
+Implementación de Menús 0,30
+Implementación y persistencia de preferencias 0,20
+Justificación de la forma de almacenaje de cada información 0,30
+6. Base de datos con ROOM 1,50
+Correcto diseño 0,50
+Correcta implementación de forma eficiente con LiveData 1,00
+7. Servicios de google y extras 2,50
+Implementación de servicios como Firebase 0,50
+Implementación de funcionalidades extra. Justificación y comprensión 1,00
+Justificación y comprensión de desarrollos específicos 1,00
+8. Control de versiones 0,5
+Commits frecuentes y con cambios pequeños 0,2
+Mensajes de commits descriptivos y estructurados 0,2
+Uso de ramas para desarrollo 0,1
+TOTAL 10,00
+
+
+
+
+
+En la siguiente unidad se encuentra la entrega e instrucciones sobre esta. 
+
+
