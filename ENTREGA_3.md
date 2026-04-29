@@ -115,9 +115,8 @@ Rama: `feature/recycler` y `feature/material`.
 
 | # | Commit | Responsable | Notas | Estado |
 |---|--------|-------------|-------|--------|
-| 1.1 | `refactor(hub): convertir HubFragment a RecyclerView con MaterialCardView` | Rafael | Crear `GameAdapter`, `list_item_game.xml` con DataBinding (`<variable name="game">`), `ViewHolder(binding)`. Modelo `GameInfo(id, name, iconRes, minPlayers, maxPlayers)` | ⬜ |
-| 1.1 | `refactor(hub): convertir HubFragment a RecyclerView con MaterialCardView` | Rafael | Crear `GameAdapter`, `list_item_game.xml` con DataBinding (`<variable name="game">`), `ViewHolder(binding)`. Modelo `GameInfo(id, name, iconRes, minPlayers, maxPlayers)` | ⬜ |
-| 1.2 | `feat(hub): añadir FloatingActionButton para modo LAN dentro de CoordinatorLayout` | Rafael | Snackbar de feedback al pulsar | ⬜ |
+| 1.1 | `refactor(hub): convertir HubFragment a RecyclerView con MaterialCardView` | Rafael | Crear `GameAdapter`, `list_item_game.xml` con DataBinding (`<variable name="game">`), `ViewHolder(binding)`. Modelo `GameInfo(id, name, iconRes, minPlayers, maxPlayers)` | ✅ |
+| 1.2 | `feat(hub): añadir FloatingActionButton para modo LAN dentro de CoordinatorLayout` | Rafael | Snackbar de feedback al pulsar | ✅ |
 | 1.3 | `style(theme): migrar a Theme.MaterialComponents.DayNight.DarkActionBar` | Rafael | Definir `colorPrimary`, `colorSecondary`, `colorSurface` en `values/colors.xml` y `values-night/colors.xml` | ⬜ |
 | 1.4 | `style(ui): sustituir EditText por TextInputLayout + TextInputEditText en config de juegos` | Rafael | `MindConfigFragment` y `AsConfigFragment` | ⬜ |
 | 1.5 | `style(ui): usar MaterialButtonToggleGroup para selección de dificultad en The Mind` | Rafael | `singleSelection=true`, listener `addOnButtonCheckedListener` | ⬜ |
