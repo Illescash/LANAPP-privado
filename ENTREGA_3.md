@@ -132,14 +132,14 @@ Rama: `feature/menu-prefs`.
 
 | # | Commit | Responsable | Notas | Estado |
 |---|--------|-------------|-------|--------|
-| 2.1 | `refactor(nav): unificar navegación en MainActivity con NavGraph único` | Diego | Eliminar `TheMindActivity` y `ElAsActivity`; un solo `MainActivity` con `NavHostFragment`. Las activities pasan a ser fragments dentro del mismo grafo | ⬜ |
-| 2.2 | `feat(nav): añadir BottomNavigationView con setupWithNavController` | Diego | Items: Hub, Historial, Ajustes. Menú `bottom_nav_menu.xml` | ⬜ |
-| 2.3 | `feat(nav): añadir DrawerLayout con NavigationView y cabecera personalizada` | Diego | Alternativa al bottom nav para tablets; `nav_header.xml` con logo. Activable según `sw600dp` | ⬜ |
-| 2.4 | `feat(menu): toolbar con MenuProvider (compartir, settings, logout)` | Diego | `MenuProvider` registrado en `onCreateView` de `HubFragment` y `HistoryFragment` | ⬜ |
-| 2.5 | `feat(settings): crear SettingsActivity con root_preferences.xml` | Diego | `SwitchPreferenceCompat` (modo oscuro, sonido), `ListPreference` (tema/idioma), `EditTextPreference` (alias del jugador) | ⬜ |
-| 2.6 | `feat(settings): persistir alias de jugador y tema con DefaultSharedPreferences` | Diego | Companion object con `getPlayerAlias`, `setPlayerAlias`, `getNightMode`. Aplicar `AppCompatDelegate.setDefaultNightMode` al cambiar | ⬜ |
-| 2.7 | `feat(settings): aplicar setDefaultValues en Application.onCreate` | Diego | `PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false)` | ⬜ |
-| 2.8 | `docs(readme): justificar uso de SharedPreferences para alias/tema vs Room para historial` | Diego | En el README del repo `app/`: SP para datos pequeños clave-valor; Room para datos estructurados consultables | ⬜ |
+| 2.1 | `refactor(nav): unificar navegación en MainActivity con NavGraph único` | Rafael | Eliminar `TheMindActivity` y `ElAsActivity`; un solo `MainActivity` con `NavHostFragment`. Las activities pasan a ser fragments dentro del mismo grafo | ✅ |
+| 2.2 | `feat(nav): añadir BottomNavigationView con setupWithNavController` | Rafael | Items: Hub, Historial, Ajustes. Menú `bottom_nav_menu.xml` | ✅ |
+| 2.3 | `feat(nav): añadir DrawerLayout con NavigationView y cabecera personalizada` | Rafael | Alternativa al bottom nav para tablets; `nav_header.xml` con logo. Activable según `sw600dp` | ⬜ |
+| 2.4 | `feat(menu): toolbar con MenuProvider (compartir, settings, logout)` | Rafael | `MenuProvider` registrado en `onCreateView` de `HubFragment` y `HistoryFragment` | ⬜ |
+| 2.5 | `feat(settings): crear SettingsActivity con root_preferences.xml` | Rafael | `SwitchPreferenceCompat` (modo oscuro, sonido), `ListPreference` (tema/idioma), `EditTextPreference` (alias del jugador) | ⬜ |
+| 2.6 | `feat(settings): persistir alias de jugador y tema con DefaultSharedPreferences` | Rafael | Companion object con `getPlayerAlias`, `setPlayerAlias`, `getNightMode`. Aplicar `AppCompatDelegate.setDefaultNightMode` al cambiar | ⬜ |
+| 2.7 | `feat(settings): aplicar setDefaultValues en Application.onCreate` | Rafael | `PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false)` | ⬜ |
+| 2.8 | `docs(readme): justificar uso de SharedPreferences para alias/tema vs Room para historial` | Rafael | En el README del repo `app/`: SP para datos pequeños clave-valor; Room para datos estructurados consultables | ⬜ |
 
 ---
 
@@ -149,15 +149,15 @@ Rama: `feature/room`.
 
 | # | Commit | Responsable | Notas | Estado |
 |---|--------|-------------|-------|--------|
-| 3.1 | `chore(gradle): añadir plugin kotlin-kapt y dependencias de Room` | Rafael | `room-runtime`, `room-ktx`, `room-compiler` (kapt) en versiones de `libs.versions.toml` | ⬜ |
-| 3.2 | `feat(db): crear entidad MatchHistory (@Entity) con id, game, players, winner, durationMs, finishedAt` | Rafael | `@PrimaryKey(autoGenerate = true) val id: Long = 0`. `players` se guarda como String separado por comas (no relaciones, no visto en clase) | ⬜ |
+| 3.1 | `chore(gradle): añadir plugin kotlin-kapt y dependencias de Room` | Diego | `room-runtime`, `room-ktx`, `room-compiler` (kapt) en versiones de `libs.versions.toml` | ⬜ |
+| 3.2 | `feat(db): crear entidad MatchHistory (@Entity) con id, game, players, winner, durationMs, finishedAt` | Diego | `@PrimaryKey(autoGenerate = true) val id: Long = 0`. `players` se guarda como String separado por comas (no relaciones, no visto en clase) | ⬜ |
 | 3.3 | `feat(db): crear MatchDao con suspend insert/delete y LiveData<List<MatchHistory>>` | Diego | `@Query("SELECT * FROM match_history ORDER BY finishedAt DESC")`, `@Query("DELETE FROM match_history")` | ⬜ |
 | 3.4 | `feat(db): crear PartyHubDatabase con companion getInstance singleton y fallbackToDestructiveMigration` | Diego | Versión 1, `exportSchema = false` | ⬜ |
-| 3.5 | `feat(app): exponer database como propiedad lazy en PartyHubApplication` | Rafael | Registrar la `Application` en `AndroidManifest.xml` con `android:name=".PartyHubApplication"` | ⬜ |
-| 3.6 | `feat(history): crear HistoryViewModel y HistoryViewModelFactory` | Rafael | VM recibe `MatchDao`, expone `val matches = dao.getAll()`, escrituras con `viewModelScope.launch` | ⬜ |
+| 3.5 | `feat(app): exponer database como propiedad lazy en PartyHubApplication` | Diego | Registrar la `Application` en `AndroidManifest.xml` con `android:name=".PartyHubApplication"` | ⬜ |
+| 3.6 | `feat(history): crear HistoryViewModel y HistoryViewModelFactory` | Diego | VM recibe `MatchDao`, expone `val matches = dao.getAll()`, escrituras con `viewModelScope.launch` | ⬜ |
 | 3.7 | `feat(history): crear HistoryFragment con RecyclerView observando LiveData del VM` | Diego | `adapter.data = emptyList()` antes del observe; al recibir, `notifyDataSetChanged()` | ⬜ |
 | 3.8 | `feat(history): registrar partida al terminar The Mind y El As` | Diego | En `MindResultFragment` y `AsResultFragment`, llamar a `historyViewModel.addMatch(...)` desde el botón "Guardar" | ⬜ |
-| 3.9 | `feat(history): añadir menú con "Borrar historial" usando MenuProvider` | Rafael | Confirmación con `MaterialAlertDialog` antes de `dao.removeAll()` | ⬜ |
+| 3.9 | `feat(history): añadir menú con "Borrar historial" usando MenuProvider` | Diego | Confirmación con `MaterialAlertDialog` antes de `dao.removeAll()` | ⬜ |
 
 ---
 
