@@ -136,10 +136,10 @@ Rama: `feature/menu-prefs`.
 | 2.2 | `feat(nav): añadir BottomNavigationView con setupWithNavController` | Rafael | Items: Hub, Historial, Ajustes. Menú `bottom_nav_menu.xml` | ✅ |
 | 2.3 | `feat(nav): añadir DrawerLayout con NavigationView y cabecera personalizada` | Rafael | Alternativa al bottom nav para tablets; `nav_header.xml` con logo. Activable según `sw600dp` | ✅ |
 | 2.4 | `feat(menu): toolbar con MenuProvider (compartir, settings, logout)` | Rafael | `MenuProvider` registrado en `onCreateView` de `HubFragment` y `HistoryFragment` | ✅ |
-| 2.5 | `feat(settings): crear SettingsActivity con root_preferences.xml` | Rafael | `SwitchPreferenceCompat` (modo oscuro, sonido), `ListPreference` (tema/idioma), `EditTextPreference` (alias del jugador) | ⬜ |
-| 2.6 | `feat(settings): persistir alias de jugador y tema con DefaultSharedPreferences` | Rafael | Companion object con `getPlayerAlias`, `setPlayerAlias`, `getNightMode`. Aplicar `AppCompatDelegate.setDefaultNightMode` al cambiar | ⬜ |
-| 2.7 | `feat(settings): aplicar setDefaultValues en Application.onCreate` | Rafael | `PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false)` | ⬜ |
-| 2.8 | `docs(readme): justificar uso de SharedPreferences para alias/tema vs Room para historial` | Rafael | En el README del repo `app/`: SP para datos pequeños clave-valor; Room para datos estructurados consultables | ⬜ |
+| 2.5 | `feat(settings): crear SettingsActivity con root_preferences.xml` | Rafael | `SwitchPreferenceCompat` (modo oscuro, sonido), `ListPreference` (tema/idioma), `EditTextPreference` (alias del jugador) | ✅ |
+| 2.6 | `feat(settings): persistir alias de jugador y tema con DefaultSharedPreferences` | Rafael | Companion object con `getPlayerAlias`, `setPlayerAlias`, `getNightMode`. Aplicar `AppCompatDelegate.setDefaultNightMode` al cambiar | ✅ |
+| 2.7 | `feat(settings): aplicar setDefaultValues en Application.onCreate` | Rafael | `PreferenceManager.setDefaultValues(this, R.xml.root_preferences, false)` | ✅ |
+| 2.8 | `docs(readme): justificar uso de SharedPreferences para alias/tema vs Room para historial` | Rafael | En el README del repo `app/`: SP para datos pequeños clave-valor; Room para datos estructurados consultables | ✅ |
 
 ---
 
