@@ -149,15 +149,15 @@ Rama: `feature/room`.
 
 | # | Commit | Responsable | Notas | Estado |
 |---|--------|-------------|-------|--------|
-| 3.1 | `chore(gradle): añadir plugin kotlin-kapt y dependencias de Room` | Diego | `room-runtime`, `room-ktx`, `room-compiler` (kapt) en versiones de `libs.versions.toml` | ⬜ |
-| 3.2 | `feat(db): crear entidad MatchHistory (@Entity) con id, game, players, winner, durationMs, finishedAt` | Diego | `@PrimaryKey(autoGenerate = true) val id: Long = 0`. `players` se guarda como String separado por comas (no relaciones, no visto en clase) | ⬜ |
-| 3.3 | `feat(db): crear MatchDao con suspend insert/delete y LiveData<List<MatchHistory>>` | Diego | `@Query("SELECT * FROM match_history ORDER BY finishedAt DESC")`, `@Query("DELETE FROM match_history")` | ⬜ |
-| 3.4 | `feat(db): crear PartyHubDatabase con companion getInstance singleton y fallbackToDestructiveMigration` | Diego | Versión 1, `exportSchema = false` | ⬜ |
-| 3.5 | `feat(app): exponer database como propiedad lazy en PartyHubApplication` | Diego | Registrar la `Application` en `AndroidManifest.xml` con `android:name=".PartyHubApplication"` | ⬜ |
-| 3.6 | `feat(history): crear HistoryViewModel y HistoryViewModelFactory` | Diego | VM recibe `MatchDao`, expone `val matches = dao.getAll()`, escrituras con `viewModelScope.launch` | ⬜ |
-| 3.7 | `feat(history): crear HistoryFragment con RecyclerView observando LiveData del VM` | Diego | `adapter.data = emptyList()` antes del observe; al recibir, `notifyDataSetChanged()` | ⬜ |
-| 3.8 | `feat(history): registrar partida al terminar The Mind y El As` | Diego | En `MindResultFragment` y `AsResultFragment`, llamar a `historyViewModel.addMatch(...)` desde el botón "Guardar" | ⬜ |
-| 3.9 | `feat(history): añadir menú con "Borrar historial" usando MenuProvider` | Diego | Confirmación con `MaterialAlertDialog` antes de `dao.removeAll()` | ⬜ |
+| 3.1 | `chore(gradle): añadir plugin kotlin-kapt y dependencias de Room` | Diego | `room-runtime`, `room-ktx`, `room-compiler` (kapt) en versiones de `libs.versions.toml` | ✅ c54f1cf (Diego) |
+| 3.2 | `feat(db): crear entidad MatchHistory (@Entity) con id, game, players, winner, durationMs, finishedAt` | Diego | `@PrimaryKey(autoGenerate = true) val id: Long = 0`. `players` se guarda como String separado por comas (no relaciones, no visto en clase) | ✅ c54f1cf (Diego) |
+| 3.3 | `feat(db): crear MatchDao con suspend insert/delete y LiveData<List<MatchHistory>>` | Diego | `@Query("SELECT * FROM match_history ORDER BY finishedAt DESC")`, `@Query("DELETE FROM match_history")` | ✅ c54f1cf (Diego) |
+| 3.4 | `feat(db): crear PartyHubDatabase con companion getInstance singleton y fallbackToDestructiveMigration` | Diego | Versión 1, `exportSchema = false` | ✅ c54f1cf (Diego) |
+| 3.5 | `feat(app): exponer database como propiedad lazy en PartyHubApplication` | Diego | Registrar la `Application` en `AndroidManifest.xml` con `android:name=".PartyHubApplication"` | ✅ c54f1cf (Diego) |
+| 3.6 | `feat(history): crear HistoryViewModel y HistoryViewModelFactory` | Diego | VM recibe `MatchDao`, expone `val matches = dao.getAll()`, escrituras con `viewModelScope.launch` | ✅ 7534e34 (Diego) |
+| 3.7 | `feat(history): crear HistoryFragment con RecyclerView observando LiveData del VM` | Diego | `adapter.data = emptyList()` antes del observe; al recibir, `notifyDataSetChanged()` | ✅ 7534e34 (Diego) |
+| 3.8 | `feat(history): registrar partida al terminar The Mind y El As` | Diego | En `MindResultFragment` y `AsResultFragment`, llamar a `historyViewModel.addMatch(...)` desde el botón "Guardar" | ✅ 7534e34 (Diego) |
+| 3.9 | `feat(history): añadir menú con "Borrar historial" usando MenuProvider` | Diego | Confirmación con `MaterialAlertDialog` antes de `dao.removeAll()` | ✅ 7534e34 (Diego) |
 
 ---
 
@@ -167,15 +167,15 @@ Rama: `feature/firebase`. **Requiere cuenta Google del equipo y `google-services
 
 | # | Commit | Responsable | Notas | Estado |
 |---|--------|-------------|-------|--------|
-| 4.1 | `chore(firebase): registrar app en Firebase Console y añadir google-services.json` | Diego | Crear proyecto `partyhub-dadm`, registrar paquete `com.partyhub`, descargar JSON | ⬜ |
-| 4.2 | `chore(gradle): añadir plugin google-services y BOM de Firebase` | Diego | Project: `id("com.google.gms.google-services") apply false`. Module: `firebase-bom`, `firebase-auth-ktx`, `firebase-firestore-ktx`, `kotlinx-coroutines-play-services` | ⬜ |
-| 4.3 | `feat(auth): crear AuthRepository con register/login/logout devolviendo Result<FirebaseUser>` | Rafael | Usar `.await()` de `kotlinx-coroutines-play-services` | ⬜ |
-| 4.4 | `feat(auth): crear AuthViewModel con LiveData<FirebaseUser?> y LiveData<String> error` | Rafael | Backing property pattern; `init { _user.value = repository.currentUser() }` | ⬜ |
-| 4.5 | `feat(auth): crear AuthFragment como destino inicial del NavGraph` | Diego | Dos `TextInputLayout` (email, password) + botones registro/login. Si `user != null`, navigate al hub y `popBackStack` | ⬜ |
-| 4.6 | `feat(auth): añadir logout en menú principal que vuelve a AuthFragment` | Diego | Limpiar pila de navegación con `popBackStack(R.id.authFragment, false)` | ⬜ |
-| 4.7 | `feat(history): crear HistoryRepository sincronizando Room con Firestore` | Rafael | `addMatch`: insert en DAO + `collection.document(id).set(toMap())`. `syncFromFirestore(scope)` con `addSnapshotListener` | ⬜ |
-| 4.8 | `refactor(history): HistoryViewModel usa HistoryRepository en vez de DAO directo` | Rafael | Factory recibe el repository en lugar del DAO. Init dispara la sincronización | ⬜ |
-| 4.9 | `feat(firestore): segmentar match_history por uid de usuario` | Diego | Subcolección `users/{uid}/matches`. Reglas: `allow read, write: if request.auth != null && request.auth.uid == userId` | ⬜ |
+| 4.1 | `chore(firebase): registrar app en Firebase Console y añadir google-services.json` | Diego | Crear proyecto `partyhub-dadm`, registrar paquete `com.partyhub`, descargar JSON | ✅ a0a3032 (Diego) |
+| 4.2 | `chore(gradle): añadir plugin google-services y BOM de Firebase` | Diego | Project: `id("com.google.gms.google-services") apply false`. Module: `firebase-bom`, `firebase-auth-ktx`, `firebase-firestore-ktx`, `kotlinx-coroutines-play-services` | ✅ a0a3032 (Diego) |
+| 4.3 | `feat(auth): crear AuthRepository con register/login/logout devolviendo Result<FirebaseUser>` | Rafael | Usar `.await()` de `kotlinx-coroutines-play-services` | ✅ a0a3032 (Diego) |
+| 4.4 | `feat(auth): crear AuthViewModel con LiveData<FirebaseUser?> y LiveData<String> error` | Rafael | Backing property pattern; `init { _user.value = repository.currentUser() }` | ✅ a0a3032 (Diego) |
+| 4.5 | `feat(auth): crear AuthFragment como destino inicial del NavGraph` | Diego | Dos `TextInputLayout` (email, password) + botones registro/login. Si `user != null`, navigate al hub y `popBackStack` | ✅ a0a3032 (Diego) |
+| 4.6 | `feat(auth): añadir logout en menú principal que vuelve a AuthFragment` | Diego | Limpiar pila de navegación con `popBackStack(R.id.authFragment, false)` | ✅ a0a3032 (Diego) |
+| 4.7 | `feat(history): crear HistoryRepository sincronizando Room con Firestore` | Rafael | `addMatch`: insert en DAO + `collection.document(id).set(toMap())`. `syncFromFirestore(scope)` con `addSnapshotListener` | ✅ a0a3032 (Diego) |
+| 4.8 | `refactor(history): HistoryViewModel usa HistoryRepository en vez de DAO directo` | Rafael | Factory recibe el repository en lugar del DAO. Init dispara la sincronización | ✅ dcd2f26 (Diego) |
+| 4.9 | `feat(firestore): segmentar match_history por uid de usuario` | Diego | Subcolección `users/{uid}/matches`. Reglas: `allow read, write: if request.auth != null && request.auth.uid == userId` | ✅ a0a3032 (Diego) |
 
 ---
 
@@ -208,7 +208,7 @@ Rama: `feature/polish`.
 | 6.1 | `fix(lifecycle): persistir estado de juego en onSaveInstanceState para todas las pantallas` | Diego | The Mind (cartas jugadas, nivel), El As (mano, vidas, turno) | ⬜ |
 | 6.2 | `feat(theme): añadir values-night/themes.xml y values-night/colors.xml para dark mode` | Rafael | Forzable desde Settings con `AppCompatDelegate.setDefaultNightMode` | ⬜ |
 | 6.3 | `feat(layout): añadir layout-land y layout-sw600dp para HubFragment e HistoryFragment` | Rafael | Tablets: dos paneles (lista + detalle). Landscape: grid en lugar de lista | ⬜ |
-| 6.4 | `feat(i18n): añadir traducciones values-en/strings.xml usando Translations Editor` | Diego | Mínimo: hub, settings, errores de auth, mensajes LAN | ⬜ |
+| 6.4 | `feat(i18n): añadir traducciones values-en/strings.xml usando Translations Editor` | Diego | Mínimo: hub, settings, errores de auth, mensajes LAN | ✅ 73c817e (Diego) — externalización completa de strings + values-en/ |
 | 6.5 | `style(launcher): personalizar ic_launcher con vector asset propio` | Cualquiera | Ya pendiente de E2 (C4) | ⬜ |
 | 6.6 | `feat(share): mantener intent implícito ACTION_SEND en pantallas de resultado` | Diego | Verificar que sigue funcionando tras unificar navegación | ⬜ |
 
