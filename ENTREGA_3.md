@@ -185,17 +185,17 @@ Rama: `feature/lan`. Es la funcionalidad estrella del proyecto y vale como "func
 
 | # | Commit | Responsable | Notas | Estado |
 |---|--------|-------------|-------|--------|
-| 5.1 | `chore(manifest): añadir permisos INTERNET y ACCESS_NETWORK_STATE` | Diego | También `ACCESS_WIFI_STATE` para mostrar SSID en la UI | ⬜ |
-| 5.2 | `feat(lan): crear DiscoveryService con UDP broadcast para anunciar/detectar host` | Rafael | Puerto fijo (p.ej. 8888). Mensaje JSON `{"app":"partyhub","host":"Rafa","ip":"…","port":9999}` | ⬜ |
-| 5.3 | `feat(lan): crear LanServer (Host) con ServerSocket y un hilo por cliente` | Rafael | Acepta conexiones, mantiene `List<ClientConnection>`, broadcast de mensajes a todos | ⬜ |
-| 5.4 | `feat(lan): crear LanClient con Socket y lectura en hilo separado` | Diego | Envía/recibe líneas JSON por `BufferedReader/Writer` | ⬜ |
-| 5.5 | `feat(lan): definir protocolo de mensajes (JOIN, STATE, ACTION, LEAVE) con org.json` | Diego | Documentar en `app/README.md` | ⬜ |
-| 5.6 | `feat(lan): crear LobbyViewModel con LiveData de jugadores conectados y rol (HOST/CLIENT)` | Rafael | Backing property con `_players: MutableLiveData<List<PlayerInfo>>` | ⬜ |
-| 5.7 | `feat(lan): crear LanLobbyFragment con RecyclerView de jugadores + botones "Crear sala" / "Unirse"` | Diego | Bottom sheet con SSID actual y lista de hosts descubiertos | ⬜ |
-| 5.8 | `refactor(themind): adaptar MindGameEngine para recibir acciones desde LAN o desde UI local` | Rafael | El `GameEngine` sigue siendo lógica pura; el VM decide si la acción la origina la UI o llega por `LanClient` | ⬜ |
-| 5.9 | `refactor(elas): adaptar AsGameEngine para sincronización LAN (host es fuente de verdad)` | Diego | Solo el host ejecuta la engine; los clientes envían `ACTION` y reciben `STATE` | ⬜ |
-| 5.10 | `feat(lan): cerrar sockets en onDestroy del VM (onCleared) y al pulsar atrás` | Rafael | Importante para no dejar puertos colgados al rotar pantalla | ⬜ |
-| 5.11 | `fix(lan): manejar desconexión de cliente y caída del host con Snackbar de aviso` | Diego | Volver al lobby si cae el host | ⬜ |
+| 5.1 | `chore(manifest): añadir permisos INTERNET y ACCESS_NETWORK_STATE` | Diego | También `ACCESS_WIFI_STATE` para mostrar SSID en la UI | ✅ 8da611c |
+| 5.2 | `feat(lan): crear DiscoveryService con UDP broadcast para anunciar/detectar host` | Rafael | Puerto fijo (p.ej. 8888). Mensaje JSON `{"app":"partyhub","host":"Rafa","ip":"…","port":9999}` | ✅ 8da611c |
+| 5.3 | `feat(lan): crear LanServer (Host) con ServerSocket y un hilo por cliente` | Rafael | Acepta conexiones, mantiene `List<ClientConnection>`, broadcast de mensajes a todos | ✅ 8da611c |
+| 5.4 | `feat(lan): crear LanClient con Socket y lectura en hilo separado` | Diego | Envía/recibe líneas JSON por `BufferedReader/Writer` | ✅ 8da611c |
+| 5.5 | `feat(lan): definir protocolo de mensajes (JOIN, STATE, ACTION, LEAVE) con org.json` | Diego | Documentar en `app/README.md` | ✅ 8da611c |
+| 5.6 | `feat(lan): crear LobbyViewModel con LiveData de jugadores conectados y rol (HOST/CLIENT)` | Rafael | Backing property con `_players: MutableLiveData<List<PlayerInfo>>` | ✅ 8da611c |
+| 5.7 | `feat(lan): crear LanLobbyFragment con RecyclerView de jugadores + botones "Crear sala" / "Unirse"` | Diego | Bottom sheet con SSID actual y lista de hosts descubiertos | ✅ 8da611c |
+| 5.8 | `refactor(themind): adaptar MindGameEngine para recibir acciones desde LAN o desde UI local` | Rafael | El `GameEngine` sigue siendo lógica pura; el VM decide si la acción la origina la UI o llega por `LanClient` | ✅ 8da611c |
+| 5.9 | `refactor(elas): adaptar AsGameEngine para sincronización LAN (host es fuente de verdad)` | Diego | Solo el host ejecuta la engine; los clientes envían `ACTION` y reciben `STATE` | ✅ 8da611c |
+| 5.10 | `feat(lan): cerrar sockets en onDestroy del VM (onCleared) y al pulsar atrás` | Rafael | Importante para no dejar puertos colgados al rotar pantalla | ✅ 8da611c |
+| 5.11 | `fix(lan): manejar desconexión de cliente y caída del host con Snackbar de aviso` | Diego | Volver al lobby si cae el host | ✅ 8da611c |
 
 ---
 
